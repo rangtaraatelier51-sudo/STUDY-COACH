@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Study Coach — Quiz</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">Study Coach</div>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="subjects.html" class="nav-link">Subjects</a>
+        <a href="coach.html" class="nav-link">AI Coach</a>
+        <a href="quiz.html" class="nav-link active">Quiz</a>
+        <a href="#" class="nav-link disabled">Focus Mode <span class="soon">soon</span></a>
+      </nav>
+      <div class="sidebar-foot">v1 prototype · ₹0 stack</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Quiz</h1>
+          <p class="subhead">Test yourself on any subject and chapter.</p>
+        </div>
+      </header>
+
+      <div class="quiz-layout">
+        <!-- Setup form -->
+        <div class="quiz-setup" id="quiz-setup">
+          <h3>Create a quiz</h3>
+
+          <label>Subject</label>
+          <select id="quiz-subject"></select>
+          <p class="form-hint" id="quiz-no-subjects" style="display:none;">
+            <a href="subjects.html">Add a subject first</a> to create a quiz.
+          </p>
+
+          <label>Chapter</label>
+          <select id="quiz-chapter"></select>
+
+          <label>Difficulty</label>
+          <select id="quiz-difficulty">
+            <option value="easy">Easy — review basics</option>
+            <option value="medium" selected>Medium — standard practice</option>
+            <option value="hard">Hard — challenge yourself</option>
+          </select>
+
+          <label>Number of questions</label>
+          <input type="number" id="quiz-count" min="1" max="50" value="5" />
+
+          <button class="btn-primary" id="start-quiz-btn" style="width: 100%; margin-top: 16px;">Start quiz</button>
+        </div>
+
+        <!-- Quiz view -->
+        <div class="quiz-view" id="quiz-view" style="display: none;">
+          <div class="quiz-header">
+            <div>
+              <h3 id="quiz-title">Quiz</h3>
+              <p id="quiz-progress" class="quiz-progress"></p>
+            </div>
+            <div class="quiz-progress-bar">
+              <div id="quiz-progress-fill" class="quiz-progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="quiz-question-card">
+            <div class="question-number" id="question-number">Q1</div>
+            <div class="question-text" id="question-text"></div>
+
+            <div class="question-options" id="question-options"></div>
+
+            <div class="question-feedback" id="question-feedback" style="display: none;"></div>
+          </div>
+
+          <div class="quiz-actions">
+            <button class="btn-text" id="quiz-back-btn">← Back</button>
+            <button class="btn-primary" id="quiz-next-btn">Next</button>
+          </div>
+        </div>
+
+        <!-- Results view -->
+        <div class="quiz-results" id="quiz-results" style="display: none;">
+          <div class="results-card">
+            <h3>Quiz complete!</h3>
+            <div class="results-score">
+              <div class="score-circle">
+                <div class="score-number" id="results-score">0%</div>
+              </div>
+            </div>
+
+            <p class="results-detail" id="results-detail"></p>
+
+            <div class="results-breakdown" id="results-breakdown"></div>
+
+            <div class="results-actions">
+              <button class="btn-ghost" id="retake-btn">Retake quiz</button>
+              <button class="btn-primary" id="back-home-btn">← Back to setup</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/store.js"></script>
+  <script src="js/quiz.js"></script>
+</body>
+</html>
