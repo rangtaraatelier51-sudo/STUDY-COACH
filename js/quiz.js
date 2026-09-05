@@ -6,44 +6,172 @@ let currentQuestionIndex = 0;
 let selectedAnswer = null;
 let showingFeedback = false;
 
-// ---------- rule-based question generation ----------
-// Generates questions based on subject, chapter, and difficulty
-// Each question gets a correct answer and 3 plausible distractors
+// ---------- improved rule-based question generation ----------
+// Better templates, smarter distractors, more variety
 
-const questionTemplates = {
-  easy: [
-    "What is the primary concept of {topic}?",
-    "Which of the following best describes {topic}?",
-    "In {topic}, what does this term mean?",
-    "Which is an example of {topic}?",
-    "How is {topic} typically applied?",
+const questionTypes = {
+  easy: {
+    definition: [
+      "What is the definition of {topic}?",
+      "Which best defines {topic}?",
+      "{topic} refers to:",
+      "In its most basic form, {topic} is:",
+    ],
+    identification: [
+      "Which of these is an example of {topic}?",
+      "Which statement correctly identifies {topic}?",
+      "Which is a characteristic of {topic}?",
+    ],
+    basic: [
+      "What is the primary purpose of {topic}?",
+      "Which is a fundamental feature of {topic}?",
+      "What does {topic} primarily involve?",
+    ],
+  },
+  medium: {
+    application: [
+      "How would {topic} be applied in a practical scenario?",
+      "In practice, {topic} is most commonly used for:",
+      "Which approach best demonstrates {topic}?",
+    ],
+    comparison: [
+      "How does {topic} differ from related concepts?",
+      "What distinguishes {topic} from similar ideas?",
+      "Compared to other approaches, {topic}:",
+    ],
+    analysis: [
+      "Which factors influence {topic}?",
+      "What is a key consideration when studying {topic}?",
+      "Understanding {topic} requires knowing:",
+    ],
+    mechanism: [
+      "How does {topic} work?",
+      "What is the process behind {topic}?",
+      "Which describes the mechanism of {topic}?",
+    ],
+  },
+  hard: {
+    critique: [
+      "What is a common misconception about {topic}?",
+      "Which assumption about {topic} is often incorrect?",
+      "What is frequently misunderstood regarding {topic}?",
+    ],
+    edge_case: [
+      "What is an exception or edge case in {topic}?",
+      "Under what unusual circumstances might {topic} not apply?",
+      "What are the limitations of {topic}?",
+    ],
+    synthesis: [
+      "How does {topic} relate to broader principles?",
+      "Integrating {topic} with other concepts, what emerges?",
+      "What deeper insight does {topic} reveal?",
+    ],
+    evaluation: [
+      "Which critique of {topic} is most valid?",
+      "What is a weakness in the standard understanding of {topic}?",
+      "Why might {topic} be contested or debated?",
+    ],
+  },
+};
+
+const answerPatterns = {
+  easy_definition: [
+    `A process or concept involving ${'{topic}'}`,
+    `The practice of implementing ${'{topic}'}`,
+    `A fundamental principle of ${'{topic}'}`,
   ],
-  medium: [
-    "What is the relationship between {topic} and common applications?",
-    "In what scenario would {topic} be most relevant?",
-    "How do you solve problems involving {topic}?",
-    "Which statement about {topic} is most accurate?",
-    "What distinguishes {topic} from related concepts?",
+  easy_identification: [
+    `A direct example of ${'{topic}'}`,
+    `A key characteristic of ${'{topic}'}`,
+    `A primary instance of ${'{topic}'}`,
   ],
-  hard: [
-    "Compare and contrast {topic} with advanced concepts.",
-    "What are the edge cases or exceptions in {topic}?",
-    "How would you apply {topic} to a complex scenario?",
-    "What is a common misconception about {topic}?",
-    "Analyze the limitations of {topic} in real-world situations.",
+  medium_application: [
+    `${'{topic}'} is typically used for solving practical problems`,
+    `${'{topic}'} applies best when circumstances align with its principles`,
+    `${'{topic}'} becomes most valuable in real-world implementation`,
+  ],
+  medium_comparison: [
+    `${'{topic}'} focuses on aspects that related methods overlook`,
+    `Unlike alternatives, ${'{topic}'} emphasizes specific elements`,
+    `${'{topic}'} provides a distinct perspective compared to standard approaches`,
+  ],
+  hard_misconception: [
+    `Many assume ${'{topic}'} works universally, but context matters`,
+    `A common error is oversimplifying ${'{topic}'}`,
+    `People often misunderstand the nuance in ${'{topic}'}`,
+  ],
+  hard_limitation: [
+    `${'{topic}'} has inherent constraints in certain scenarios`,
+    `The applicability of ${'{topic}'} depends on specific conditions`,
+    `${'{topic}'} breaks down when assumptions don't hold`,
   ],
 };
 
+const distractorPatterns = {
+  easy: [
+    `A misunderstanding of ${'{topic}'}`,
+    `An unrelated concept`,
+    `An oversimplification of ${'{topic}'}`,
+    `The opposite of ${'{topic}'}`,
+  ],
+  medium: [
+    `Confuses ${'{topic}'} with a similar but distinct concept`,
+    `Ignores a critical aspect of ${'{topic}'}`,
+    `Applies ${'{topic}'} in an inappropriate context`,
+    `Reverses the relationship in ${'{topic}'}`,
+  ],
+  hard: [
+    `Misses the nuance and complexity of ${'{topic}'}`,
+    `Oversimplifies what ${'{topic}'} truly entails`,
+    `Conflates ${'{topic}'} with a superficially related idea`,
+    `Assumes ${'{topic}'} is more universal than it actually is`,
+  ],
+};
+
+function getRandomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function generateQuestion(subject, chapter, difficulty, questionNumber) {
   const topic = chapter || subject;
-  const templates = questionTemplates[difficulty] || questionTemplates.medium;
-  const template = templates[questionNumber % templates.length];
-  const questionText = template.replace("{topic}", topic);
 
-  // Generate a correct answer and distractors based on difficulty
-  const correctAnswer = generateCorrectAnswer(topic, difficulty);
-  const distractors = generateDistractors(topic, difficulty, correctAnswer);
+  // Pick question type based on difficulty
+  let questionType, questionText, answerKey;
+  
+  if (difficulty === "easy") {
+    const types = Object.keys(questionTypes.easy);
+    questionType = types[questionNumber % types.length];
+    const templates = questionTypes.easy[questionType];
+    questionText = getRandomItem(templates).replace("{topic}", topic);
+    answerKey = `easy_${questionType}`;
+  } else if (difficulty === "medium") {
+    const types = Object.keys(questionTypes.medium);
+    questionType = types[questionNumber % types.length];
+    const templates = questionTypes.medium[questionType];
+    questionText = getRandomItem(templates).replace("{topic}", topic);
+    answerKey = `medium_${questionType}`;
+  } else {
+    const types = Object.keys(questionTypes.hard);
+    questionType = types[questionNumber % types.length];
+    const templates = questionTypes.hard[questionType];
+    questionText = getRandomItem(templates).replace("{topic}", topic);
+    answerKey = `hard_${questionType}`;
+  }
 
+  // Generate correct answer
+  const correctAnswerTemplates = answerPatterns[answerKey] || answerPatterns["easy_definition"];
+  const correctAnswer = getRandomItem(correctAnswerTemplates).replace(/\$\{'\{topic\}'\}/g, topic);
+
+  // Generate plausible distractors
+  const distractorSet = distractorPatterns[difficulty];
+  const distractors = [];
+  for (let i = 0; i < 3; i++) {
+    const template = getRandomItem(distractorSet);
+    const distractor = template.replace(/\$\{'\{topic\}'\}/g, topic);
+    distractors.push(distractor);
+  }
+
+  // Shuffle and get correct index
   const options = [correctAnswer, ...distractors].sort(() => Math.random() - 0.5);
   const correctIndex = options.indexOf(correctAnswer);
 
@@ -54,58 +182,6 @@ function generateQuestion(subject, chapter, difficulty, questionNumber) {
     correctIndex,
     correctAnswer,
   };
-}
-
-function generateCorrectAnswer(topic, difficulty) {
-  const answers = {
-    easy: [
-      `A fundamental principle of ${topic}`,
-      `The core concept of ${topic}`,
-      `A basic property of ${topic}`,
-      `The definition of ${topic}`,
-      `An essential aspect of ${topic}`,
-    ],
-    medium: [
-      `${topic} depends on understanding underlying patterns`,
-      `${topic} requires integration of multiple concepts`,
-      `${topic} is applied through systematic methodology`,
-      `${topic} involves practical problem-solving`,
-      `${topic} balances theory and application`,
-    ],
-    hard: [
-      `${topic} exhibits complexity in edge cases`,
-      `${topic} requires nuanced understanding of limitations`,
-      `${topic} challenges oversimplified interpretations`,
-      `${topic} demands critical analysis of assumptions`,
-      `${topic} reveals deeper principles through scrutiny`,
-    ],
-  };
-
-  const answerList = answers[difficulty] || answers.medium;
-  return answerList[Math.floor(Math.random() * answerList.length)];
-}
-
-function generateDistractors(topic, difficulty, correctAnswer) {
-  const distractors = {
-    easy: [
-      `A misconception about ${topic}`,
-      `An unrelated concept`,
-      `An oversimplification of ${topic}`,
-    ],
-    medium: [
-      `Confuses ${topic} with a related concept`,
-      `Ignores a key aspect of ${topic}`,
-      `Applies ${topic} in the wrong context`,
-    ],
-    hard: [
-      `Misses the nuance in ${topic}`,
-      `Oversimplifies the complexity of ${topic}`,
-      `Conflates ${topic} with a superficially similar idea`,
-    ],
-  };
-
-  const distractorList = distractors[difficulty] || distractors.medium;
-  return distractorList;
 }
 
 // ---------- quiz management ----------
