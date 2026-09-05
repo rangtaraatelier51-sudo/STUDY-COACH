@@ -214,6 +214,17 @@ h1, h2, h3 {
   cursor: pointer;
 }
 
+.btn-primary {
+  background: var(--amber);
+  color: #241a06;
+  border: none;
+  border-radius: 3px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .task-list, .exam-list {
   list-style: none;
   margin: 0;
@@ -297,6 +308,10 @@ h1, h2, h3 {
   gap: 6px;
 }
 
+.modal-wide {
+  width: 380px;
+}
+
 .modal label {
   font-size: 12px;
   color: var(--muted);
@@ -304,6 +319,15 @@ h1, h2, h3 {
 }
 
 .modal input {
+  background: var(--panel-raised);
+  border: 1px solid var(--rule);
+  color: var(--paper);
+  border-radius: 3px;
+  padding: 8px 9px;
+  font-size: 13.5px;
+}
+
+.modal select {
   background: var(--panel-raised);
   border: 1px solid var(--rule);
   color: var(--paper);
@@ -327,15 +351,47 @@ h1, h2, h3 {
   cursor: pointer;
 }
 
-.btn-primary {
-  background: var(--amber);
-  color: #241a06;
+.modal-empty-note {
+  display: none;
+  font-size: 12px;
+  color: var(--rose);
+  margin-top: 6px;
+}
+
+.modal-empty-note a {
+  color: var(--amber);
+}
+
+.opt-label {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.chapter-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chapter-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.chapter-row input {
+  flex: 1;
+}
+
+.chapter-row-remove {
+  background: none;
   border: none;
-  border-radius: 3px;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--muted);
+  font-size: 16px;
   cursor: pointer;
+  padding: 0 4px;
 }
 
 /* Subjects page */
@@ -407,64 +463,218 @@ h1, h2, h3 {
   color: var(--muted);
 }
 
-/* Modal extras */
-.modal-wide {
-  width: 380px;
+/* AI Coach page */
+.coach-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: start;
 }
 
-.opt-label {
-  font-weight: 400;
+.coach-panel {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 16px;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.coach-panel h3 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+
+.coach-panel label {
+  font-size: 11.5px;
   color: var(--muted);
-  font-size: 11px;
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 4px;
 }
 
-.modal select {
+.coach-panel input, .coach-panel select {
   background: var(--panel-raised);
   border: 1px solid var(--rule);
   color: var(--paper);
   border-radius: 3px;
-  padding: 8px 9px;
-  font-size: 13.5px;
+  padding: 7px 8px;
+  font-size: 13px;
+  width: 100%;
 }
 
-.modal-empty-note {
-  display: none;
-  font-size: 12px;
-  color: var(--rose);
+.completion-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.completion-input input[type="range"] {
+  flex: 1;
+  padding: 0;
+  height: 6px;
+  appearance: none;
+  background: var(--rule);
+  border: none;
+  border-radius: 3px;
+  outline: none;
+}
+
+.completion-input input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--amber);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.completion-input input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--amber);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.completion-input span {
+  font-size: 13px;
+  color: var(--amber);
+  font-weight: 600;
+  min-width: 35px;
+}
+
+.form-hint {
+  font-size: 11.5px;
+  color: var(--muted);
   margin-top: 6px;
 }
 
-.modal-empty-note a {
+.form-hint a {
   color: var(--amber);
 }
 
-.chapter-rows {
+.coach-plan-view {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.plan-header {
+  margin-bottom: 18px;
+}
+
+.plan-header h3 {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.plan-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.plan-timeline {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
-.chapter-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
+.plan-day-card {
+  background: var(--panel-raised);
+  border-left: 3px solid var(--amber);
+  border-radius: 3px;
+  padding: 10px 12px;
+  font-size: 13px;
+  transition: all 0.2s ease;
 }
 
-.chapter-row input {
-  flex: 1;
+.plan-day-card.plan-day-first {
+  border-top: 1px solid var(--sage);
 }
 
-.chapter-row-remove {
-  background: none;
-  border: none;
+.plan-day-card.plan-day-last {
+  border-bottom: 1px solid var(--rose);
+}
+
+.plan-day-number {
+  font-weight: 600;
+  color: var(--paper);
+  margin-bottom: 2px;
+}
+
+.plan-day-phase {
+  font-size: 11px;
   color: var(--muted);
-  font-size: 16px;
-  cursor: pointer;
-  padding: 0 4px;
+  margin-bottom: 4px;
+}
+
+.plan-day-rec {
+  font-size: 12.5px;
+  color: var(--paper);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.plan-day-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.stat-hours {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.stat-progress {
+  color: var(--sage);
+}
+
+.plan-notes {
+  background: var(--rule);
+  border-left: 2px solid var(--sage);
+  border-radius: 3px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.plan-notes p {
+  margin: 0;
+}
+
+.coach-empty {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
 }
 
 /* Responsive */
+@media (max-width: 900px) {
+  .coach-layout {
+    grid-template-columns: 1fr;
+  }
+  .coach-panel {
+    position: static;
+  }
+}
+
 @media (max-width: 760px) {
   .app-shell { grid-template-columns: 1fr; }
   .sidebar {
@@ -478,6 +688,11 @@ h1, h2, h3 {
   .nav { flex-direction: row; }
   .board, .stat-row { grid-template-columns: 1fr; }
   .main { padding: 18px; }
+}
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
 }
 
 :focus-visible {
