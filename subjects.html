@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Study Coach — Subjects</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">Study Coach</div>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="subjects.html" class="nav-link active">Subjects</a>
+        <a href="#" class="nav-link disabled">AI Coach <span class="soon">soon</span></a>
+        <a href="#" class="nav-link disabled">Quiz <span class="soon">soon</span></a>
+        <a href="#" class="nav-link disabled">Focus Mode <span class="soon">soon</span></a>
+      </nav>
+      <div class="sidebar-foot">v1 prototype · ₹0 stack</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Subjects</h1>
+          <p class="subhead">Set up subjects and chapters — tasks on your dashboard pull from these.</p>
+        </div>
+        <button class="btn-primary" id="add-subject-btn">+ Add subject</button>
+      </header>
+
+      <section class="subject-grid" id="subject-grid"></section>
+      <p class="empty-note" id="subject-empty">No subjects yet — add your first one to get started.</p>
+    </main>
+  </div>
+
+  <!-- Add/Edit Subject Modal -->
+  <div class="modal-backdrop" id="subject-modal">
+    <div class="modal modal-wide">
+      <h3 id="subject-modal-title">New subject</h3>
+      <label>Subject name</label>
+      <input type="text" id="subject-name" placeholder="e.g. Physics" />
+
+      <label>Chapters</label>
+      <div id="chapter-rows" class="chapter-rows"></div>
+      <button class="btn-ghost" id="add-chapter-row" type="button">+ Add chapter</button>
+
+      <div class="modal-actions">
+        <button class="btn-text" id="subject-cancel">Cancel</button>
+        <button class="btn-primary" id="subject-save">Save subject</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/store.js"></script>
+  <script src="js/subjects.js"></script>
+</body>
+</html>
