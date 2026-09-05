@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Timetable Generator | Study Coach</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 30px;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      background: #222;
+      color: white;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .day {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fc;
+      border-radius: 10px;
+    }
+
+    .study-session {
+      background: white;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border-left: 4px solid #222;
+    }
+
+    .empty {
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>📅 Timetable Generator</h1>
+    <p class="subtitle">
+      Create a study timetable based on your available time.
+    </p>
+
+    <div class="card">
+
+      <h2>Build Your Timetable</h2>
+
+      <label for="hours">
+        Study hours per day
+      </label>
+
+      <input
+        type="number"
+        id="hours"
+        min="1"
+        max="12"
+        value="3"
+      />
+
+      <label for="days">
+        Number of study days
+      </label>
+
+      <input
+        type="number"
+        id="days"
+        min="1"
+        max="7"
+        value="7"
+      />
+
+      <label for="startTime">
+        Start time
+      </label>
+
+      <input
+        type="time"
+        id="startTime"
+        value="17:00"
+      />
+
+      <button id="generateBtn">
+        Generate Timetable
+      </button>
+
+    </div>
+
+    <div class="card">
+
+      <h2>Your Timetable</h2>
+
+      <div id="timetable">
+        <p class="empty">
+          Your timetable will appear here.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="store.js"></script>
+  <script src="timetable.js"></script>
+
+</body>
+</html>
