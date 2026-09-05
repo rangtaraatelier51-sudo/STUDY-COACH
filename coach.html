@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Study Coach — AI Coach</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">Study Coach</div>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="subjects.html" class="nav-link">Subjects</a>
+        <a href="coach.html" class="nav-link active">AI Coach</a>
+        <a href="#" class="nav-link disabled">Quiz <span class="soon">soon</span></a>
+        <a href="#" class="nav-link disabled">Focus Mode <span class="soon">soon</span></a>
+      </nav>
+      <div class="sidebar-foot">v1 prototype · ₹0 stack</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>AI Study Coach</h1>
+          <p class="subhead">Tell me about your exam, and I'll build a realistic day-by-day plan.</p>
+        </div>
+      </header>
+
+      <div class="coach-layout">
+        <!-- LEFT: input form -->
+        <div class="coach-panel">
+          <h3>Generate a study plan</h3>
+
+          <label>Subject</label>
+          <select id="coach-subject"></select>
+          <p class="form-hint" id="coach-no-subjects" style="display:none;">
+            <a href="subjects.html">Add a subject first</a> to create a study plan.
+          </p>
+
+          <label>Days until exam</label>
+          <input type="number" id="coach-days" min="1" max="365" value="14" />
+
+          <label>Current completion</label>
+          <div class="completion-input">
+            <input type="range" id="coach-completion-range" min="0" max="100" value="40" />
+            <span id="coach-completion-display">40%</span>
+          </div>
+
+          <label>Study hours available per day</label>
+          <input type="number" id="coach-hours" min="1" max="12" value="3" />
+
+          <button class="btn-primary" id="generate-btn" style="width: 100%; margin-top: 16px;">Generate plan</button>
+        </div>
+
+        <!-- RIGHT: generated plan -->
+        <div class="coach-plan-view" id="plan-view" style="display: none;">
+          <div class="plan-header">
+            <h3 id="plan-title">Your study plan</h3>
+            <p class="plan-subtitle" id="plan-subtitle"></p>
+          </div>
+
+          <div class="plan-timeline" id="plan-timeline"></div>
+
+          <div class="plan-notes">
+            <p id="plan-notes"></p>
+          </div>
+
+          <button class="btn-ghost" id="regenerate-btn">← Back to form</button>
+        </div>
+
+        <!-- empty state -->
+        <div class="coach-empty" id="coach-empty">
+          <p>Generate a plan to see your schedule here.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/store.js"></script>
+  <script src="js/coach.js"></script>
+</body>
+</html>
