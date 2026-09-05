@@ -1,8 +1,13 @@
 // Subjects page logic. Relies on js/store.js being loaded first.
 
 let state = loadState();
-let editingSubjectId = null;
 
+// Make sure the subjects array always exists
+if (!Array.isArray(state.subjects)) {
+  state.subjects = [];
+}
+
+let editingSubjectId = null;
 // ---------- rendering ----------
 function taskStatsFor(subjectId) {
   const tasks = state.tasks.filter((t) => t.subjectId === subjectId);
