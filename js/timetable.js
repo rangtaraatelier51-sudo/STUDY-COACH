@@ -1,11 +1,3 @@
-// Load saved app data
-let state = loadState();
-
-// Make sure subjects exists
-if (!Array.isArray(state.subjects)) {
-  state.subjects = [];
-}
-
 const generateBtn = document.getElementById("generateBtn");
 const timetable = document.getElementById("timetable");
 
@@ -16,21 +8,29 @@ function generateTimetable() {
   const numberOfDays = Number(document.getElementById("days").value);
   const startTime = document.getElementById("startTime").value;
 
-  // Basic validation
-  if (!hours || hours < 1) {
-    alert("Please enter at least 1 study hour.");
+  if (hours < 1 || numberOfDays < 1 || !startTime) {
+    alert("Please enter valid timetable details.");
     return;
   }
 
-  if (!numberOfDays || numberOfDays < 1) {
-    alert("Please enter at least 1 study day.");
-    return;
+  // Get subjects saved by the Study Coach app
+  let subjects = [];
+
+  try {
+    const saved = localStorage.getItem("studyCoach.v1");
+
+    if (saved) {
+      const state = JSON.parse(saved);
+
+      if (Array.isArray(state.subjects)) {
+        subjects = state.subjects;
+      }
+    }
+  } catch (error) {
+    console.error("Could not load subjects:", error);
   }
 
-  // Get subjects from the app
-  let subjects = state.subjects || [];
-
-  // If there are no subjects yet
+  // If the user hasn't created subjects yet
   if (subjects.length === 0) {
     subjects = [
       { name: "Biology" },
@@ -50,7 +50,6 @@ function generateTimetable() {
   ];
 
   let html = "";
-
   let subjectIndex = 0;
 
   for (let day = 0; day < numberOfDays; day++) {
@@ -68,26 +67,30 @@ function generateTimetable() {
 
       html += `
         <div class="study-session">
-          <strong>${time}</strong>
-          <br>
-          📚 ${subject.name}
+          <div class="session-time">${time}</div>
+          <div class="session-subject">
+            📚 ${subject.name}
+          </div>
         </div>
       `;
 
       subjectIndex++;
     }
 
-    html += `</div>`;
+    html += `
+      </div>
+    `;
   }
 
   timetable.innerHTML = html;
 }
 
 
-// Add hours to a time such as 17:00
 function addHours(timeString, hoursToAdd) {
 
-  const [hours, minutes] = timeString.split(":").map(Number);
+  const [hours, minutes] = timeString
+    .split(":")
+    .map(Number);
 
   const date = new Date();
 
