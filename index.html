@@ -13,7 +13,7 @@
       <div class="brand">Study Coach</div>
       <nav class="nav">
         <a href="index.html" class="nav-link active">Dashboard</a>
-        <a href="#" class="nav-link disabled">Subjects <span class="soon">soon</span></a>
+        <a href="subjects.html" class="nav-link">Subjects</a>
         <a href="#" class="nav-link disabled">AI Coach <span class="soon">soon</span></a>
         <a href="#" class="nav-link disabled">Quiz <span class="soon">soon</span></a>
         <a href="#" class="nav-link disabled">Focus Mode <span class="soon">soon</span></a>
@@ -83,7 +83,12 @@
       <label>Task</label>
       <input type="text" id="task-input" placeholder="e.g. Finish Electrostatics problem set" />
       <label>Subject</label>
-      <input type="text" id="task-subject" placeholder="e.g. Physics" />
+      <select id="task-subject"></select>
+      <label>Chapter <span class="opt-label">(optional)</span></label>
+      <select id="task-chapter"></select>
+      <p class="modal-empty-note" id="task-no-subjects">
+        You don't have any subjects yet — <a href="subjects.html">add one first</a>.
+      </p>
       <div class="modal-actions">
         <button class="btn-text" id="task-cancel">Cancel</button>
         <button class="btn-primary" id="task-save">Add task</button>
@@ -106,6 +111,7 @@
     </div>
   </div>
 
+  <script src="js/store.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
