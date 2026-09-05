@@ -10,7 +10,23 @@ const SUBJECT_COLORS = ["#f2a93b", "#7fb69e", "#e07a63", "#6fa3c9", "#b48ad1"];
 
 function loadState() {
   const raw = localStorage.getItem(STORE_KEY);
-  if (raw) return JSON.parse(raw);
+
+  if (raw) {
+    try {
+      const saved = JSON.parse(raw);
+
+      return {
+        subjects: Array.isArray(saved.subjects) ? saved.subjects : [],
+        tasks: Array.isArray(saved.tasks) ? saved.tasks : [],
+        exams: Array.isArray(saved.exams) ? saved.exams : [],
+        streak: Number.isFinite(saved.streak) ? saved.streak : 0,
+        lastActiveDate: saved.lastActiveDate || null,
+      };
+    } catch (error) {
+      console.error("Could not load saved state:", error);
+    }
+  }
+
   return {
     subjects: [],
     tasks: [],
@@ -19,7 +35,6 @@ function loadState() {
     lastActiveDate: null,
   };
 }
-
 function saveState(state) {
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
 }
