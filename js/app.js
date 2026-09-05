@@ -1,37 +1,8 @@
-// ---------- storage helpers ----------
-// v1 uses localStorage so the dashboard works with zero backend.
-// When Supabase is wired in (Step 7), swap these three functions
-// for calls to the Supabase client and the rest of the app stays the same.
-
-const STORE_KEY = "studyCoach.v1";
-
-function loadState() {
-  const raw = localStorage.getItem(STORE_KEY);
-  if (raw) return JSON.parse(raw);
-  return {
-    tasks: [],
-    exams: [],
-    streak: 0,
-    lastActiveDate: null,
-  };
-}
-
-function saveState(state) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(state));
-}
+  // Dashboard page logic. Relies on js/store.js being loaded first.
 
 let state = loadState();
 
 // ---------- streak logic ----------
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function daysBetween(a, b) {
-  const ms = new Date(b) - new Date(a);
-  return Math.round(ms / (1000 * 60 * 60 * 24));
-}
-
 function updateStreakOnVisit() {
   const today = todayISO();
   if (state.lastActiveDate === today) return; // already counted today
@@ -103,11 +74,13 @@ function renderTasks() {
 
     const title = document.createElement("span");
     title.className = "task-title";
-    title.textContent = task.title;
+    const chapter = task.chapterId ? chapterName(state, task.subjectId, task.chapterId) : "";
+    title.textContent = chapter ? `${task.title} · ${chapter}` : task.title;
 
     const tag = document.createElement("span");
     tag.className = "task-subject-tag";
-    tag.textContent = task.subject || "General";
+    tag.textContent = subjectName(state, task.subjectId);
+    tag.style.borderColor = colorForSubject(state, task.subjectId);
 
     li.appendChild(checkbox);
     li.appendChild(title);
@@ -155,6 +128,60 @@ function renderAll() {
   renderExams();
 }
 
+// ---------- task modal: subject + chapter dropdowns ----------
+function populateTaskSubjectSelect() {
+  const select = document.getElementById("task-subject");
+  const chapterSelect = document.getElementById("task-chapter");
+  const noSubjectsNote = document.getElementById("task-no-subjects");
+  const saveBtn = document.getElementById("task-save");
+
+  select.innerHTML = "";
+
+  if (state.subjects.length === 0) {
+    noSubjectsNote.style.display = "block";
+    saveBtn.disabled = true;
+    saveBtn.style.opacity = "0.5";
+    chapterSelect.innerHTML = "";
+    return;
+  }
+
+  noSubjectsNote.style.display = "none";
+  saveBtn.disabled = false;
+  saveBtn.style.opacity = "1";
+
+  state.subjects.forEach((subject) => {
+    const opt = document.createElement("option");
+    opt.value = subject.id;
+    opt.textContent = subject.name;
+    select.appendChild(opt);
+  });
+
+  populateTaskChapterSelect();
+}
+
+function populateTaskChapterSelect() {
+  const subjectId = document.getElementById("task-subject").value;
+  const chapterSelect = document.getElementById("task-chapter");
+  const subject = state.subjects.find((s) => String(s.id) === String(subjectId));
+
+  chapterSelect.innerHTML = "";
+  const noneOpt = document.createElement("option");
+  noneOpt.value = "";
+  noneOpt.textContent = "No specific chapter";
+  chapterSelect.appendChild(noneOpt);
+
+  if (subject && subject.chapters) {
+    subject.chapters.forEach((chapter) => {
+      const opt = document.createElement("option");
+      opt.value = chapter.id;
+      opt.textContent = chapter.name;
+      chapterSelect.appendChild(opt);
+    });
+  }
+}
+
+document.getElementById("task-subject").addEventListener("change", populateTaskChapterSelect);
+
 // ---------- modals ----------
 function openModal(id) {
   document.getElementById(id).classList.add("open");
@@ -163,16 +190,25 @@ function closeModal(id) {
   document.getElementById(id).classList.remove("open");
 }
 
-document.getElementById("add-task-btn").addEventListener("click", () => openModal("task-modal"));
+document.getElementById("add-task-btn").addEventListener("click", () => {
+  populateTaskSubjectSelect();
+  openModal("task-modal");
+});
 document.getElementById("task-cancel").addEventListener("click", () => closeModal("task-modal"));
 document.getElementById("task-save").addEventListener("click", () => {
   const title = document.getElementById("task-input").value.trim();
-  const subject = document.getElementById("task-subject").value.trim();
-  if (!title) return;
-  state.tasks.push({ id: Date.now(), title, subject, done: false });
+  const subjectId = document.getElementById("task-subject").value;
+  const chapterId = document.getElementById("task-chapter").value;
+  if (!title || !subjectId) return;
+  state.tasks.push({
+    id: Date.now(),
+    title,
+    subjectId: Number(subjectId),
+    chapterId: chapterId ? Number(chapterId) : null,
+    done: false,
+  });
   saveState(state);
   document.getElementById("task-input").value = "";
-  document.getElementById("task-subject").value = "";
   closeModal("task-modal");
   renderAll();
 });
