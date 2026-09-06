@@ -16,7 +16,7 @@
         <a href="subjects.html" class="nav-link">Subjects</a>
         <a href="coach.html" class="nav-link">AI Coach</a>
         <a href="quiz.html" class="nav-link">Quiz</a>
-        <a href="#" class="nav-link disabled">Focus Mode <span class="soon">soon</span></a>
+        <a href="focus.html" class="nav-link">Focus Mode</a>
       </nav>
       <div class="sidebar-foot">v1 prototype · ₹0 stack</div>
     </aside>
@@ -24,89 +24,94 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <h1>Today</h1>
-          <p class="subhead" id="today-date"></p>
+          <h1>Dashboard</h1>
+          <p class="subhead">Your study hub — track tasks, streaks, and progress.</p>
         </div>
         <div class="streak-pill">
-          <span class="flame">🔥</span>
+          <span class="streak-label">🔥 Streak:</span>
           <span id="streak-count">0</span>
-          <span class="streak-label">day streak</span>
         </div>
       </header>
 
-      <section class="stat-row">
+      <div class="stat-row">
         <div class="stat-card">
-          <div class="stat-label">Today's progress</div>
+          <div class="stat-label">Progress today</div>
           <div class="progress-track">
             <div class="progress-fill" id="progress-fill"></div>
           </div>
           <div class="stat-value" id="progress-pct">0%</div>
+          <div class="stat-sub" id="progress-text">0 of 0 done</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Tasks today</div>
-          <div class="stat-value" id="task-count">0 / 0</div>
-          <div class="stat-sub">done</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Upcoming exams</div>
-          <div class="stat-value" id="exam-count">0</div>
-          <div class="stat-sub">in the next 30 days</div>
-        </div>
-      </section>
 
-      <section class="board">
+        <div class="stat-card">
+          <div class="stat-label">Study sessions</div>
+          <div class="stat-value" id="session-stat">—</div>
+          <div class="stat-sub" id="session-text">today</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Next exam</div>
+          <div class="stat-value" id="next-exam-name">—</div>
+          <div class="stat-sub" id="next-exam-days">No exams</div>
+        </div>
+      </div>
+
+      <div class="board">
         <div class="panel">
           <div class="panel-head">
             <h2>Today's tasks</h2>
-            <button class="btn-ghost" id="add-task-btn">+ Add task</button>
+            <button class="btn-ghost" id="add-task-btn">+ Add</button>
           </div>
           <ul class="task-list" id="task-list"></ul>
-          <p class="empty-note" id="task-empty">No tasks yet — add your first one.</p>
+          <p class="empty-note" id="tasks-empty">No tasks yet — add one to get started.</p>
         </div>
 
         <div class="panel">
           <div class="panel-head">
             <h2>Upcoming exams</h2>
-            <button class="btn-ghost" id="add-exam-btn">+ Add exam</button>
+            <button class="btn-ghost" id="add-exam-btn">+ Add</button>
           </div>
           <ul class="exam-list" id="exam-list"></ul>
-          <p class="empty-note" id="exam-empty">No exams on the calendar yet.</p>
+          <p class="empty-note" id="exams-empty">No exams scheduled yet.</p>
         </div>
-      </section>
+      </div>
     </main>
   </div>
 
-  <!-- Add Task Modal -->
+  <!-- Add/edit task modal -->
   <div class="modal-backdrop" id="task-modal">
-    <div class="modal">
-      <h3>New task</h3>
-      <label>Task</label>
-      <input type="text" id="task-input" placeholder="e.g. Finish Electrostatics problem set" />
+    <div class="modal modal-wide">
+      <h3>Add task</h3>
+      <label>What are you studying?</label>
+      <input type="text" id="task-title" placeholder="e.g., Calculus Chapter 5" />
       <label>Subject</label>
       <select id="task-subject"></select>
-      <label>Chapter <span class="opt-label">(optional)</span></label>
+      <label>Chapter</label>
       <select id="task-chapter"></select>
-      <p class="modal-empty-note" id="task-no-subjects">
-        You don't have any subjects yet — <a href="subjects.html">add one first</a>.
-      </p>
+      <div class="modal-empty-note" id="task-empty-note">
+        <strong>No subjects yet.</strong> <a href="subjects.html">Create one first</a>.
+      </div>
       <div class="modal-actions">
-        <button class="btn-text" id="task-cancel">Cancel</button>
-        <button class="btn-primary" id="task-save">Add task</button>
+        <button class="btn-text" id="close-task-modal">Cancel</button>
+        <button class="btn-primary" id="save-task-btn">Add task</button>
       </div>
     </div>
   </div>
 
-  <!-- Add Exam Modal -->
+  <!-- Add/edit exam modal -->
   <div class="modal-backdrop" id="exam-modal">
-    <div class="modal">
-      <h3>New exam</h3>
+    <div class="modal modal-wide">
+      <h3>Add exam</h3>
       <label>Subject</label>
-      <input type="text" id="exam-subject" placeholder="e.g. Chemistry" />
+      <select id="exam-subject"></select>
       <label>Date</label>
       <input type="date" id="exam-date" />
+      <div class="modal-empty-note" id="exam-empty-note">
+        <strong>No subjects yet.</strong> <a href="subjects.html">Create one first</a>.
+      </div>
       <div class="modal-actions">
-        <button class="btn-text" id="exam-cancel">Cancel</button>
-        <button class="btn-primary" id="exam-save">Add exam</button>
+        <button class="btn-text" id="close-exam-modal">Cancel</button>
+        <button class="btn-primary" id="save-exam-btn">Add exam</button>
       </div>
     </div>
   </div>
