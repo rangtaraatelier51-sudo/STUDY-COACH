@@ -899,7 +899,206 @@ h1, h2, h3 {
   margin-top: 20px;
 }
 
+/* Focus Mode page */
+.focus-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+.focus-setup {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 20px;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.focus-setup h3 {
+  font-size: 16px;
+  margin: 0 0 14px;
+}
+
+.focus-setup label {
+  font-size: 11.5px;
+  color: var(--muted);
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.focus-setup input, .focus-setup select {
+  background: var(--panel-raised);
+  border: 1px solid var(--rule);
+  color: var(--paper);
+  border-radius: 3px;
+  padding: 7px 8px;
+  font-size: 13px;
+  width: 100%;
+}
+
+.preset-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.preset-btn {
+  background: var(--panel-raised);
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  border-radius: 3px;
+  padding: 8px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+  border-color: var(--amber);
+  color: var(--paper);
+}
+
+.preset-btn.active {
+  background: var(--amber);
+  color: #241a06;
+  border-color: var(--amber);
+}
+
+.custom-times {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.custom-times label {
+  margin-top: 0;
+}
+
+.focus-timer-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  grid-column: 2;
+}
+
+.timer-card {
+  background: var(--panel);
+  border: 2px solid var(--amber);
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+}
+
+.timer-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--amber);
+  margin-bottom: 16px;
+}
+
+.timer-label-work {
+  color: var(--amber);
+}
+
+.timer-label-break {
+  color: var(--sage);
+}
+
+.timer-display {
+  font-family: 'Courier New', monospace;
+  font-size: 72px;
+  font-weight: 600;
+  color: var(--paper);
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+}
+
+.timer-subject {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.timer-controls {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 500px;
+  justify-content: center;
+}
+
+.timer-controls button {
+  flex: 1;
+}
+
+.session-info {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.focus-history {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 16px;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.focus-history h3 {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.session-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--panel-raised);
+  border-radius: 3px;
+  font-size: 12.5px;
+}
+
+.session-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
 /* Responsive */
+@media (max-width: 1200px) {
+  .focus-layout {
+    grid-template-columns: 1fr;
+  }
+  .focus-setup, .focus-history {
+    position: static;
+  }
+  .focus-timer-view {
+    grid-column: auto;
+  }
+}
+
 @media (max-width: 900px) {
   .coach-layout {
     grid-template-columns: 1fr;
@@ -922,12 +1121,14 @@ h1, h2, h3 {
   .nav { flex-direction: row; }
   .board, .stat-row { grid-template-columns: 1fr; }
   .main { padding: 18px; }
+  .timer-display {
+    font-size: 48px;
+  }
+  .timer-card {
+    padding: 24px;
+  }
 }
 
-:focus-visible {
-  outline: 2px solid var(--amber);
-  outline-offset: 2px;
-}
 :focus-visible {
   outline: 2px solid var(--amber);
   outline-offset: 2px;
