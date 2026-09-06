@@ -7,8 +7,19 @@ let currentUser = null;
 
 // Initialize Supabase
 async function initSupabase() {
-  const { createClient } = window.supabaseModule || await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Wait for the Supabase library to load from the script tag
+  let attempts = 0;
+  while (!window.supabase && attempts < 50) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
+  }
+
+  if (!window.supabase) {
+    console.error("Supabase library failed to load");
+    return;
+  }
+
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   
   // Check if user is already logged in
   const { data: { session } } = await supabase.auth.getSession();
