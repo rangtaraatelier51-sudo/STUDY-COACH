@@ -16,7 +16,7 @@
         <a href="subjects.html" class="nav-link active">Subjects</a>
         <a href="coach.html" class="nav-link">AI Coach</a>
         <a href="quiz.html" class="nav-link">Quiz</a>
-        <a href="#" class="nav-link disabled">Focus Mode <span class="soon">soon</span></a>
+        <a href="focus.html" class="nav-link">Focus Mode</a>
       </nav>
       <div class="sidebar-foot">v1 prototype · ₹0 stack</div>
     </aside>
@@ -25,30 +25,28 @@
       <header class="topbar">
         <div>
           <h1>Subjects</h1>
-          <p class="subhead">Set up subjects and chapters — tasks on your dashboard pull from these.</p>
+          <p class="subhead">Organize your study areas. Add chapters to track progress.</p>
         </div>
-        <button class="btn-primary" id="add-subject-btn">+ Add subject</button>
+        <button class="btn-primary" id="add-subject-btn">+ New subject</button>
       </header>
 
-      <section class="subject-grid" id="subject-grid"></section>
-      <p class="empty-note" id="subject-empty">No subjects yet — add your first one to get started.</p>
+      <div class="subject-grid" id="subject-grid"></div>
+      <p class="empty-note" id="subjects-empty" style="margin-top: 20px;">No subjects yet — add one to get started.</p>
     </main>
   </div>
 
-  <!-- Add/Edit Subject Modal -->
+  <!-- Add/edit subject modal -->
   <div class="modal-backdrop" id="subject-modal">
     <div class="modal modal-wide">
-      <h3 id="subject-modal-title">New subject</h3>
+      <h3 id="subject-modal-title">Add subject</h3>
       <label>Subject name</label>
-      <input type="text" id="subject-name" placeholder="e.g. Physics" />
-
+      <input type="text" id="subject-name" placeholder="e.g., Physics, Literature" />
       <label>Chapters</label>
-      <div id="chapter-rows" class="chapter-rows"></div>
-      <button class="btn-ghost" id="add-chapter-row" type="button">+ Add chapter</button>
-
+      <div class="chapter-rows" id="chapter-rows"></div>
+      <button class="btn-text" id="add-chapter-btn" style="margin: 8px 0;">+ Add chapter</button>
       <div class="modal-actions">
-        <button class="btn-text" id="subject-cancel">Cancel</button>
-        <button class="btn-primary" id="subject-save">Save subject</button>
+        <button class="btn-text" id="close-subject-modal">Cancel</button>
+        <button class="btn-primary" id="save-subject-btn">Save</button>
       </div>
     </div>
   </div>
