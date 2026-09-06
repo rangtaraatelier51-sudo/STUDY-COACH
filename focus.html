@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Study Coach — Focus Mode</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">Study Coach</div>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">Dashboard</a>
+        <a href="subjects.html" class="nav-link">Subjects</a>
+        <a href="coach.html" class="nav-link">AI Coach</a>
+        <a href="quiz.html" class="nav-link">Quiz</a>
+        <a href="focus.html" class="nav-link active">Focus Mode</a>
+      </nav>
+      <div class="sidebar-foot">v1 prototype · ₹0 stack</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Focus Mode</h1>
+          <p class="subhead">Deep work timer with session tracking.</p>
+        </div>
+      </header>
+
+      <div class="focus-layout">
+        <!-- Setup panel -->
+        <div class="focus-setup" id="focus-setup">
+          <h3>Configure your session</h3>
+
+          <label>Timer preset</label>
+          <div class="preset-buttons">
+            <button class="preset-btn" data-work="25" data-break="5">25/5</button>
+            <button class="preset-btn" data-work="50" data-break="10">50/10</button>
+            <button class="preset-btn" data-work="45" data-break="15">45/15</button>
+            <button class="preset-btn active" data-work="custom" data-break="custom">Custom</button>
+          </div>
+
+          <div class="custom-times" id="custom-times" style="display: none;">
+            <label>Work (minutes)</label>
+            <input type="number" id="work-minutes" min="1" max="120" value="25" />
+            <label>Break (minutes)</label>
+            <input type="number" id="break-minutes" min="1" max="60" value="5" />
+          </div>
+
+          <label>Studying</label>
+          <select id="focus-subject">
+            <option value="">No subject selected</option>
+          </select>
+
+          <button class="btn-primary" id="start-focus-btn" style="width: 100%; margin-top: 16px;">Start session</button>
+        </div>
+
+        <!-- Timer view -->
+        <div class="focus-timer-view" id="focus-timer-view" style="display: none;">
+          <div class="timer-card">
+            <div class="timer-label" id="timer-label">Work</div>
+            <div class="timer-display" id="timer-display">25:00</div>
+            <div class="timer-subject" id="timer-subject"></div>
+          </div>
+
+          <div class="timer-controls">
+            <button class="btn-text" id="timer-pause-btn">Pause</button>
+            <button class="btn-ghost" id="timer-end-btn">End session</button>
+          </div>
+
+          <div class="session-info">
+            <span id="session-count">Session 1</span>
+            <span id="elapsed-time">0:00 elapsed</span>
+          </div>
+        </div>
+
+        <!-- Session history -->
+        <div class="focus-history">
+          <h3>Today's sessions</h3>
+          <ul class="session-list" id="session-list"></ul>
+          <p class="empty-note" id="history-empty">No sessions yet — start one to begin tracking.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/store.js"></script>
+  <script src="js/focus.js"></script>
+</body>
+</html>
