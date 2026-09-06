@@ -1,170 +1,193 @@
-// Subjects page logic. Relies on js/store.js being loaded first.
+// Subjects page logic. Relies on js/store.js and js/supabase.js being loaded first.
 
-let state = loadState();
+let state = null;
 let editingSubjectId = null;
 
-// ---------- rendering ----------
-function taskStatsFor(subjectId) {
-  const tasks = state.tasks.filter((t) => t.subjectId === subjectId);
-  const done = tasks.filter((t) => t.done).length;
-  return { total: tasks.length, done };
+async function initSubjects() {
+  state = await loadState();
+  renderSubjects();
+  document.getElementById("logout-btn").addEventListener("click", logout);
 }
 
-function renderSubjects() {
+async function renderSubjects() {
   const grid = document.getElementById("subject-grid");
-  const empty = document.getElementById("subject-empty");
+  const empty = document.getElementById("subjects-empty");
+
   grid.innerHTML = "";
 
   if (state.subjects.length === 0) {
     empty.style.display = "block";
     return;
   }
+
   empty.style.display = "none";
 
   state.subjects.forEach((subject) => {
-    const color = colorForSubject(state, subject.id);
-    const stats = taskStatsFor(subject.id);
-
     const card = document.createElement("div");
     card.className = "subject-card";
-    card.style.borderTopColor = color;
 
-    const head = document.createElement("div");
-    head.className = "subject-card-head";
+    const chaptersHtml =
+      subject.chapters.length > 0
+        ? subject.chapters.map((c) => `<span class="chapter-chip">${c.name}</span>`).join("")
+        : '<span class="chapter-chip chapter-chip-empty">No chapters yet</span>';
 
-    const nameEl = document.createElement("h3");
-    nameEl.textContent = subject.name;
+    card.innerHTML = `
+      <div class="subject-card-head">
+        <h3>${subject.name}</h3>
+        <div class="subject-card-actions">
+          <button class="icon-btn" data-id="${subject.id}" data-action="edit">✎</button>
+          <button class="icon-btn" data-id="${subject.id}" data-action="delete">✕</button>
+        </div>
+      </div>
+      <div class="chapter-chip-row">${chaptersHtml}</div>
+      <div class="subject-progress-line">
+        ${subject.chapters.length} chapter${subject.chapters.length !== 1 ? "s" : ""}
+      </div>
+    `;
 
-    const actions = document.createElement("div");
-    actions.className = "subject-card-actions";
+    card.querySelector('[data-action="edit"]').addEventListener("click", () => {
+      editSubject(subject.id);
+    });
 
-    const editBtn = document.createElement("button");
-    editBtn.className = "icon-btn";
-    editBtn.textContent = "Edit";
-    editBtn.addEventListener("click", () => openSubjectModal(subject));
+    card.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+      if (confirm(`Delete "${subject.name}"? All tasks will be removed.`)) {
+        try {
+          await deleteSubject(subject.id);
+          state = await loadState();
+          renderSubjects();
+        } catch (err) {
+          console.error("Failed to delete subject:", err);
+        }
+      }
+    });
 
-    const delBtn = document.createElement("button");
-    delBtn.className = "icon-btn";
-    delBtn.textContent = "Delete";
-    delBtn.addEventListener("click", () => deleteSubject(subject.id));
-
-    actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
-    head.appendChild(nameEl);
-    head.appendChild(actions);
-
-    const chapterWrap = document.createElement("div");
-    chapterWrap.className = "chapter-chip-row";
-    if (subject.chapters && subject.chapters.length > 0) {
-      subject.chapters.forEach((ch) => {
-        const chip = document.createElement("span");
-        chip.className = "chapter-chip";
-        chip.textContent = ch.name;
-        chapterWrap.appendChild(chip);
-      });
-    } else {
-      const chip = document.createElement("span");
-      chip.className = "chapter-chip chapter-chip-empty";
-      chip.textContent = "No chapters added";
-      chapterWrap.appendChild(chip);
-    }
-
-    const progressLine = document.createElement("div");
-    progressLine.className = "subject-progress-line";
-    progressLine.textContent = stats.total === 0
-      ? "No tasks yet"
-      : `${stats.done} / ${stats.total} tasks done`;
-
-    card.appendChild(head);
-    card.appendChild(chapterWrap);
-    card.appendChild(progressLine);
     grid.appendChild(card);
   });
 }
 
-// ---------- modal ----------
-function openModal(id) {
-  document.getElementById(id).classList.add("open");
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove("open");
+function editSubject(subjectId) {
+  editingSubjectId = subjectId;
+  const subject = state.subjects.find((s) => s.id === subjectId);
+
+  document.getElementById("subject-modal-title").textContent = "Edit subject";
+  document.getElementById("subject-name").value = subject.name;
+
+  const chapterRows = document.getElementById("chapter-rows");
+  chapterRows.innerHTML = "";
+
+  subject.chapters.forEach((chapter) => {
+    appendChapterRow(chapter.id, chapter.name);
+  });
+
+  document.getElementById("subject-modal").classList.add("open");
 }
 
-function addChapterRow(value) {
-  const rows = document.getElementById("chapter-rows");
+function appendChapterRow(id = null, name = "") {
+  const chapterRows = document.getElementById("chapter-rows");
   const row = document.createElement("div");
   row.className = "chapter-row";
+  row.dataset.id = id || "";
 
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = "e.g. Electrostatics";
-  input.value = value || "";
+  row.innerHTML = `
+    <input type="text" placeholder="e.g., Mechanics, Renaissance" value="${name}" class="chapter-input" />
+    <button class="chapter-row-remove" type="button">−</button>
+  `;
 
-  const removeBtn = document.createElement("button");
-  removeBtn.type = "button";
-  removeBtn.className = "chapter-row-remove";
-  removeBtn.textContent = "×";
-  removeBtn.addEventListener("click", () => row.remove());
+  row.querySelector(".chapter-row-remove").addEventListener("click", () => {
+    row.remove();
+  });
 
-  row.appendChild(input);
-  row.appendChild(removeBtn);
-  rows.appendChild(row);
+  chapterRows.appendChild(row);
 }
 
-function openSubjectModal(subject) {
-  editingSubjectId = subject ? subject.id : null;
-  document.getElementById("subject-modal-title").textContent = subject ? "Edit subject" : "New subject";
-  document.getElementById("subject-name").value = subject ? subject.name : "";
-  document.getElementById("chapter-rows").innerHTML = "";
-
-  if (subject && subject.chapters && subject.chapters.length > 0) {
-    subject.chapters.forEach((ch) => addChapterRow(ch.name));
-  } else {
-    addChapterRow("");
-  }
-  openModal("subject-modal");
-}
-
-document.getElementById("add-subject-btn").addEventListener("click", () => openSubjectModal(null));
-document.getElementById("add-chapter-row").addEventListener("click", () => addChapterRow(""));
-document.getElementById("subject-cancel").addEventListener("click", () => closeModal("subject-modal"));
-
-document.getElementById("subject-save").addEventListener("click", () => {
+async function saveSubject() {
   const name = document.getElementById("subject-name").value.trim();
-  if (!name) return;
 
-  const chapterInputs = document.querySelectorAll("#chapter-rows input");
-  const chapters = [];
-  let chapterIdBase = Date.now();
-  chapterInputs.forEach((input, i) => {
-    const val = input.value.trim();
-    if (val) chapters.push({ id: chapterIdBase + i, name: val });
-  });
-
-  if (editingSubjectId) {
-    const subject = state.subjects.find((s) => s.id === editingSubjectId);
-    subject.name = name;
-    subject.chapters = chapters;
-  } else {
-    state.subjects.push({ id: Date.now(), name, chapters });
+  if (!name) {
+    alert("Subject name required");
+    return;
   }
 
-  saveState(state);
-  closeModal("subject-modal");
-  renderSubjects();
-});
+  try {
+    if (editingSubjectId) {
+      // Update existing
+      await updateSubject(editingSubjectId, { name });
 
-function deleteSubject(id) {
-  state.subjects = state.subjects.filter((s) => s.id !== id);
-  saveState(state);
-  renderSubjects();
+      // Handle chapters: delete removed, add new
+      const subject = state.subjects.find((s) => s.id === editingSubjectId);
+      const existingIds = new Set(subject.chapters.map((c) => c.id));
+      const currentIds = new Set();
+
+      const chapterRows = document.querySelectorAll(".chapter-row");
+      for (const row of chapterRows) {
+        const input = row.querySelector(".chapter-input").value.trim();
+        const id = row.dataset.id ? Number(row.dataset.id) : null;
+
+        if (input) {
+          if (id) {
+            currentIds.add(id);
+          } else {
+            // New chapter
+            await addChapter(editingSubjectId, input);
+          }
+        }
+      }
+
+      // Delete chapters not in current
+      for (const id of existingIds) {
+        if (!currentIds.has(id)) {
+          await deleteChapter(id);
+        }
+      }
+    } else {
+      // Add new subject
+      const newSubject = await addSubject(name);
+
+      // Add chapters
+      const chapterRows = document.querySelectorAll(".chapter-row");
+      for (const row of chapterRows) {
+        const input = row.querySelector(".chapter-input").value.trim();
+        if (input) {
+          await addChapter(newSubject.id, input);
+        }
+      }
+    }
+
+    document.getElementById("subject-modal").classList.remove("open");
+    document.getElementById("subject-name").value = "";
+    document.getElementById("chapter-rows").innerHTML = "";
+    editingSubjectId = null;
+    state = await loadState();
+    renderSubjects();
+  } catch (err) {
+    console.error("Failed to save subject:", err);
+    alert("Failed to save subject");
+  }
 }
 
-document.querySelectorAll(".modal-backdrop").forEach((backdrop) => {
-  backdrop.addEventListener("click", (e) => {
-    if (e.target === backdrop) backdrop.classList.remove("open");
-  });
+document.getElementById("add-subject-btn").addEventListener("click", () => {
+  editingSubjectId = null;
+  document.getElementById("subject-modal-title").textContent = "Add subject";
+  document.getElementById("subject-name").value = "";
+  document.getElementById("chapter-rows").innerHTML = "";
+  appendChapterRow();
+  document.getElementById("subject-modal").classList.add("open");
 });
 
-// ---------- init ----------
-renderSubjects();
+document.getElementById("close-subject-modal").addEventListener("click", () => {
+  document.getElementById("subject-modal").classList.remove("open");
+});
+
+document.getElementById("subject-modal").addEventListener("click", (e) => {
+  if (e.target.id === "subject-modal") {
+    document.getElementById("subject-modal").classList.remove("open");
+  }
+});
+
+document.getElementById("add-chapter-btn").addEventListener("click", () => {
+  appendChapterRow();
+});
+
+document.getElementById("save-subject-btn").addEventListener("click", saveSubject);
+
+initSubjects();
