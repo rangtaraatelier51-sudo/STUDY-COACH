@@ -1,6 +1,5 @@
  // Dashboard page logic. Relies on js/store.js and js/supabase.js being loaded first.
-
-let state = null;
+state = null;
 
 // Initialize dashboard
 async function initDashboard() {
