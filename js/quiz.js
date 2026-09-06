@@ -1,6 +1,10 @@
 // Quiz page logic. Relies on js/store.js being loaded first.
-
-let state = loadState();
+async function initQuiz() {
+  state = await loadState();
+  populateSubjectSelect();
+}
+initQuiz();
+let state = null;
 let currentQuiz = null;
 let currentQuestionIndex = 0;
 let selectedAnswer = null;
