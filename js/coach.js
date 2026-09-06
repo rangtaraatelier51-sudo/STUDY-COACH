@@ -1,7 +1,10 @@
 // AI Study Coach page logic. Relies on js/store.js being loaded first.
-
-let state = loadState();
-
+async function initQuiz() {
+  state = await loadState();
+  populateSubjectSelect();
+}
+initQuiz();
+let state = null;
 // ---------- plan generation (rule-based, no API) ----------
 function generatePlan(subjectId, daysRemaining, currentCompletion, hoursPerDay) {
   const subject = state.subjects.find((s) => s.id === subjectId);
