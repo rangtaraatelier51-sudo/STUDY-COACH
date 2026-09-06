@@ -1,153 +1,26 @@
-  // Dashboard page logic. Relies on js/store.js being loaded first.
+ // Dashboard page logic. Relies on js/store.js and js/supabase.js being loaded first.
 
-let state = loadState();
+let state = null;
 
-// ---------- streak logic ----------
-function updateStreakOnVisit() {
-  const today = todayISO();
-  if (state.lastActiveDate === today) return; // already counted today
-  if (state.lastActiveDate) {
-    const gap = daysBetween(state.lastActiveDate, today);
-    if (gap === 1) {
-      state.streak += 1;
-    } else if (gap > 1) {
-      state.streak = 1; // streak broken, restart
-    }
-  } else {
-    state.streak = 1; // first ever visit
-  }
-  state.lastActiveDate = today;
-  saveState(state);
-}
-
-// ---------- rendering ----------
-function renderDate() {
-  const el = document.getElementById("today-date");
-  el.textContent = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function renderStreak() {
-  document.getElementById("streak-count").textContent = state.streak;
-}
-
-function renderStats() {
-  const total = state.tasks.length;
-  const done = state.tasks.filter((t) => t.done).length;
-  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-
-  document.getElementById("progress-pct").textContent = `${pct}%`;
-  document.getElementById("progress-fill").style.width = `${pct}%`;
-  document.getElementById("task-count").textContent = `${done} / ${total}`;
-
-  const upcoming = state.exams.filter((e) => daysBetween(todayISO(), e.date) >= 0 && daysBetween(todayISO(), e.date) <= 30);
-  document.getElementById("exam-count").textContent = upcoming.length;
-}
-
-function renderTasks() {
-  const list = document.getElementById("task-list");
-  const empty = document.getElementById("task-empty");
-  list.innerHTML = "";
-
-  if (state.tasks.length === 0) {
-    empty.style.display = "block";
-    return;
-  }
-  empty.style.display = "none";
-
-  state.tasks.forEach((task) => {
-    const li = document.createElement("li");
-    li.className = "task-item" + (task.done ? " done" : "");
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = task.done;
-    checkbox.addEventListener("change", () => {
-      task.done = checkbox.checked;
-      saveState(state);
-      renderTasks();
-      renderStats();
-    });
-
-    const title = document.createElement("span");
-    title.className = "task-title";
-    const chapter = task.chapterId ? chapterName(state, task.subjectId, task.chapterId) : "";
-    title.textContent = chapter ? `${task.title} · ${chapter}` : task.title;
-
-    const tag = document.createElement("span");
-    tag.className = "task-subject-tag";
-    tag.textContent = subjectName(state, task.subjectId);
-    tag.style.borderColor = colorForSubject(state, task.subjectId);
-
-    li.appendChild(checkbox);
-    li.appendChild(title);
-    li.appendChild(tag);
-    list.appendChild(li);
-  });
-}
-
-function renderExams() {
-  const list = document.getElementById("exam-list");
-  const empty = document.getElementById("exam-empty");
-  list.innerHTML = "";
-
-  if (state.exams.length === 0) {
-    empty.style.display = "block";
-    return;
-  }
-  empty.style.display = "none";
-
-  const sorted = [...state.exams].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  sorted.forEach((exam) => {
-    const li = document.createElement("li");
-    li.className = "exam-item";
-
-    const left = document.createElement("span");
-    left.textContent = exam.subject;
-
-    const days = daysBetween(todayISO(), exam.date);
-    const right = document.createElement("span");
-    right.className = "exam-days" + (days <= 7 ? " soon-tag" : "");
-    right.textContent = days < 0 ? "past" : days === 0 ? "today" : `${days}d left`;
-
-    li.appendChild(left);
-    li.appendChild(right);
-    list.appendChild(li);
-  });
-}
-
-function renderAll() {
-  renderDate();
-  renderStreak();
-  renderStats();
+// Initialize dashboard
+async function initDashboard() {
+  state = await loadState();
+  await updateStreak();
+  
+  populateTaskSubjectSelect();
+  populateTaskChapterSelect();
+  populateExamSubjectSelect();
   renderTasks();
   renderExams();
+  updateStats();
+
+  document.getElementById("logout-btn").addEventListener("click", logout);
 }
 
-// ---------- task modal: subject + chapter dropdowns ----------
-function populateTaskSubjectSelect() {
+// ---------- task management ----------
+async function populateTaskSubjectSelect() {
   const select = document.getElementById("task-subject");
-  const chapterSelect = document.getElementById("task-chapter");
-  const noSubjectsNote = document.getElementById("task-no-subjects");
-  const saveBtn = document.getElementById("task-save");
-
-  select.innerHTML = "";
-
-  if (state.subjects.length === 0) {
-    noSubjectsNote.style.display = "block";
-    saveBtn.disabled = true;
-    saveBtn.style.opacity = "0.5";
-    chapterSelect.innerHTML = "";
-    return;
-  }
-
-  noSubjectsNote.style.display = "none";
-  saveBtn.disabled = false;
-  saveBtn.style.opacity = "1";
+  select.innerHTML = '<option value="">No subject</option>';
 
   state.subjects.forEach((subject) => {
     const opt = document.createElement("option");
@@ -155,85 +28,241 @@ function populateTaskSubjectSelect() {
     opt.textContent = subject.name;
     select.appendChild(opt);
   });
-
-  populateTaskChapterSelect();
 }
 
 function populateTaskChapterSelect() {
-  const subjectId = document.getElementById("task-subject").value;
+  const subjectId = Number(document.getElementById("task-subject").value);
   const chapterSelect = document.getElementById("task-chapter");
-  const subject = state.subjects.find((s) => String(s.id) === String(subjectId));
 
-  chapterSelect.innerHTML = "";
-  const noneOpt = document.createElement("option");
-  noneOpt.value = "";
-  noneOpt.textContent = "No specific chapter";
-  chapterSelect.appendChild(noneOpt);
+  chapterSelect.innerHTML = '<option value="">All chapters</option>';
 
-  if (subject && subject.chapters) {
-    subject.chapters.forEach((chapter) => {
-      const opt = document.createElement("option");
-      opt.value = chapter.id;
-      opt.textContent = chapter.name;
-      chapterSelect.appendChild(opt);
-    });
+  if (subjectId) {
+    const subject = state.subjects.find((s) => s.id === subjectId);
+    if (subject && subject.chapters) {
+      subject.chapters.forEach((chapter) => {
+        const opt = document.createElement("option");
+        opt.value = chapter.id;
+        opt.textContent = chapter.name;
+        chapterSelect.appendChild(opt);
+      });
+    }
   }
 }
 
-document.getElementById("task-subject").addEventListener("change", populateTaskChapterSelect);
+async function renderTasks() {
+  const list = document.getElementById("task-list");
+  const empty = document.getElementById("tasks-empty");
 
-// ---------- modals ----------
-function openModal(id) {
-  document.getElementById(id).classList.add("open");
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove("open");
+  list.innerHTML = "";
+
+  if (state.tasks.length === 0) {
+    empty.style.display = "block";
+    return;
+  }
+
+  empty.style.display = "none";
+
+  state.tasks.forEach((task) => {
+    const li = document.createElement("li");
+    li.className = `task-item ${task.done ? "done" : ""}`;
+
+    const subjectName = task.subjectId ? subjectName(state, task.subjectId) : null;
+    const chapterName = task.chapterId ? chapterName(state, task.chapterId) : null;
+    const context = chapterName || subjectName || "";
+
+    li.innerHTML = `
+      <input type="checkbox" ${task.done ? "checked" : ""} data-id="${task.id}" class="task-checkbox" />
+      <span class="task-title">${task.title}</span>
+      ${context ? `<span class="task-subject-tag">${context}</span>` : ""}
+    `;
+
+    li.querySelector(".task-checkbox").addEventListener("change", async (e) => {
+      await updateTask(task.id, { done: e.target.checked });
+      renderTasks();
+      updateStats();
+    });
+
+    list.appendChild(li);
+  });
 }
 
-document.getElementById("add-task-btn").addEventListener("click", () => {
-  populateTaskSubjectSelect();
-  openModal("task-modal");
-});
-document.getElementById("task-cancel").addEventListener("click", () => closeModal("task-modal"));
-document.getElementById("task-save").addEventListener("click", () => {
-  const title = document.getElementById("task-input").value.trim();
+async function addTaskHandler() {
+  const title = document.getElementById("task-title").value.trim();
   const subjectId = document.getElementById("task-subject").value;
   const chapterId = document.getElementById("task-chapter").value;
-  if (!title || !subjectId) return;
-  state.tasks.push({
-    id: Date.now(),
-    title,
-    subjectId: Number(subjectId),
-    chapterId: chapterId ? Number(chapterId) : null,
-    done: false,
+
+  if (!title) return;
+
+  try {
+    await addTask(title, subjectId ? Number(subjectId) : null, chapterId ? Number(chapterId) : null);
+    document.getElementById("task-modal").classList.remove("open");
+    document.getElementById("task-title").value = "";
+    document.getElementById("task-subject").value = "";
+    document.getElementById("task-chapter").value = "";
+    state = await loadState();
+    renderTasks();
+    updateStats();
+  } catch (err) {
+    console.error("Failed to add task:", err);
+  }
+}
+
+// ---------- exam management ----------
+async function populateExamSubjectSelect() {
+  const select = document.getElementById("exam-subject");
+  select.innerHTML = '<option value="">Select a subject</option>';
+
+  if (state.subjects.length === 0) {
+    document.getElementById("exam-empty-note").style.display = "block";
+    return;
+  }
+
+  document.getElementById("exam-empty-note").style.display = "none";
+
+  state.subjects.forEach((subject) => {
+    const opt = document.createElement("option");
+    opt.value = subject.id;
+    opt.textContent = subject.name;
+    select.appendChild(opt);
   });
-  saveState(state);
-  document.getElementById("task-input").value = "";
-  closeModal("task-modal");
-  renderAll();
+}
+
+async function renderExams() {
+  const list = document.getElementById("exam-list");
+  const empty = document.getElementById("exams-empty");
+
+  list.innerHTML = "";
+
+  if (state.exams.length === 0) {
+    empty.style.display = "block";
+    return;
+  }
+
+  empty.style.display = "none";
+
+  state.exams.forEach((exam) => {
+    const li = document.createElement("li");
+    li.className = "exam-item";
+
+    const subject = state.subjects.find((s) => s.id === exam.subject);
+    const subjectName = subject ? subject.name : "Unknown";
+    const days = daysBetween(new Date().toISOString().split("T")[0], exam.date);
+    const isSoon = days <= 7 && days >= 0;
+
+    li.innerHTML = `
+      <span>${subjectName}</span>
+      <span class="exam-days ${isSoon ? "soon-tag" : ""}">${days} days</span>
+    `;
+
+    li.addEventListener("contextmenu", async (e) => {
+      e.preventDefault();
+      if (confirm("Delete this exam?")) {
+        try {
+          await deleteExam(exam.id);
+          state = await loadState();
+          renderExams();
+          updateStats();
+        } catch (err) {
+          console.error("Failed to delete exam:", err);
+        }
+      }
+    });
+
+    list.appendChild(li);
+  });
+}
+
+async function addExamHandler() {
+  const subjectId = document.getElementById("exam-subject").value;
+  const examDate = document.getElementById("exam-date").value;
+
+  if (!subjectId || !examDate) return;
+
+  try {
+    await addExam(Number(subjectId), examDate);
+    document.getElementById("exam-modal").classList.remove("open");
+    document.getElementById("exam-subject").value = "";
+    document.getElementById("exam-date").value = "";
+    state = await loadState();
+    renderExams();
+    updateStats();
+  } catch (err) {
+    console.error("Failed to add exam:", err);
+  }
+}
+
+// ---------- stats ----------
+function updateStats() {
+  // Progress
+  const done = state.tasks.filter((t) => t.done).length;
+  const total = state.tasks.length;
+  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+  document.getElementById("progress-pct").textContent = `${pct}%`;
+  document.getElementById("progress-text").textContent = `${done} of ${total} done`;
+  document.getElementById("progress-fill").style.width = `${pct}%`;
+
+  // Streak
+  document.getElementById("streak-count").textContent = state.streak;
+
+  // Sessions today
+  const today = todayISO();
+  const todaysSessions = state.sessions.filter((s) => s.date === today);
+  const totalPomos = todaysSessions.reduce((sum, s) => sum + s.completedSessions, 0);
+  document.getElementById("session-stat").textContent = totalPomos || "—";
+
+  // Next exam
+  const today_str = new Date().toISOString().split("T")[0];
+  const upcomingExams = state.exams
+    .filter((e) => e.date >= today_str)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  if (upcomingExams.length > 0) {
+    const nextExam = upcomingExams[0];
+    const subject = state.subjects.find((s) => s.id === nextExam.subject);
+    const days = daysBetween(today_str, nextExam.date);
+    document.getElementById("next-exam-name").textContent = subject ? subject.name : "Unknown";
+    document.getElementById("next-exam-days").textContent = `${days} days`;
+  } else {
+    document.getElementById("next-exam-name").textContent = "—";
+    document.getElementById("next-exam-days").textContent = "No exams";
+  }
+}
+
+// ---------- modals ----------
+document.getElementById("add-task-btn").addEventListener("click", () => {
+  document.getElementById("task-modal").classList.add("open");
 });
 
-document.getElementById("add-exam-btn").addEventListener("click", () => openModal("exam-modal"));
-document.getElementById("exam-cancel").addEventListener("click", () => closeModal("exam-modal"));
-document.getElementById("exam-save").addEventListener("click", () => {
-  const subject = document.getElementById("exam-subject").value.trim();
-  const date = document.getElementById("exam-date").value;
-  if (!subject || !date) return;
-  state.exams.push({ id: Date.now(), subject, date });
-  saveState(state);
-  document.getElementById("exam-subject").value = "";
-  document.getElementById("exam-date").value = "";
-  closeModal("exam-modal");
-  renderAll();
+document.getElementById("close-task-modal").addEventListener("click", () => {
+  document.getElementById("task-modal").classList.remove("open");
 });
 
-// close modal on backdrop click
-document.querySelectorAll(".modal-backdrop").forEach((backdrop) => {
-  backdrop.addEventListener("click", (e) => {
-    if (e.target === backdrop) backdrop.classList.remove("open");
-  });
+document.getElementById("task-modal").addEventListener("click", (e) => {
+  if (e.target.id === "task-modal") {
+    document.getElementById("task-modal").classList.remove("open");
+  }
 });
+
+document.getElementById("save-task-btn").addEventListener("click", addTaskHandler);
+
+document.getElementById("task-subject").addEventListener("change", populateTaskChapterSelect);
+
+document.getElementById("add-exam-btn").addEventListener("click", () => {
+  document.getElementById("exam-modal").classList.add("open");
+});
+
+document.getElementById("close-exam-modal").addEventListener("click", () => {
+  document.getElementById("exam-modal").classList.remove("open");
+});
+
+document.getElementById("exam-modal").addEventListener("click", (e) => {
+  if (e.target.id === "exam-modal") {
+    document.getElementById("exam-modal").classList.remove("open");
+  }
+});
+
+document.getElementById("save-exam-btn").addEventListener("click", addExamHandler);
 
 // ---------- init ----------
-updateStreakOnVisit();
-renderAll();
+initDashboard();
