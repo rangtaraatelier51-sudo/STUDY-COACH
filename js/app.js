@@ -3,7 +3,7 @@ state = null;
 
 // Initialize dashboard
 async function initDashboard() {
-  state = await loadState();
+  state = loadState();
   await updateStreak();
   
   populateTaskSubjectSelect();
