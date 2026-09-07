@@ -12,7 +12,7 @@ let sessionNumber = 1;
 let selectedSubject = null;
 
 async function initFocus() {
-  state = await loadState();
+  state = loadState();
   populateSubjectSelect();
   renderSessionHistory();
   document.getElementById("logout-btn").addEventListener("click", logout);
