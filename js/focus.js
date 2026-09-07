@@ -1,6 +1,5 @@
 // Focus Mode page logic. Relies on js/store.js and js/supabase.js being loaded first.
 
-state = null;
 let timerState = null;
 let timerInterval = null;
 let workMinutes = 25;
