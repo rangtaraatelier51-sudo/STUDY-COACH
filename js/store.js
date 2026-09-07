@@ -1,5 +1,4 @@
-// Shared data store. Now uses Supabase instead of localStorage.
-// All pages load this first, then their own script.
+// Shared data store. Uses Supabase backend.
 
 let state = {
   subjects: [],
@@ -10,7 +9,6 @@ let state = {
   lastActiveDate: null,
 };
 
-// Load state from Supabase
 async function loadState() {
   try {
     await window.supabaseReady();
@@ -20,7 +18,6 @@ async function loadState() {
       return state;
     }
 
-    // Fetch all data from Supabase
     const [subjects, tasks, exams, sessions, stats] = await Promise.all([
       window.supabaseGetSubjects(),
       window.supabaseGetTasks(),
@@ -67,13 +64,10 @@ async function loadState() {
   }
 }
 
-// Save state back to Supabase (called by individual update functions)
 async function saveState(newState) {
   state = newState;
-  // Individual saves happen in update functions below
 }
 
-// Subject functions
 async function addSubject(name) {
   try {
     const subject = await window.supabaseInsertSubject(name);
@@ -113,7 +107,6 @@ async function deleteSubject(id) {
   }
 }
 
-// Chapter functions
 async function addChapter(subjectId, name) {
   try {
     const chapter = await window.supabaseInsertChapter(subjectId, name);
@@ -143,7 +136,6 @@ async function deleteChapter(id) {
   }
 }
 
-// Task functions
 async function addTask(title, subjectId, chapterId) {
   try {
     const task = await window.supabaseInsertTask(title, subjectId, chapterId);
@@ -184,7 +176,6 @@ async function deleteTask(id) {
   }
 }
 
-// Exam functions
 async function addExam(subjectId, date) {
   try {
     const exam = await window.supabaseInsertExam(subjectId, date);
@@ -210,15 +201,9 @@ async function deleteExam(id) {
   }
 }
 
-// Session functions
 async function addSession(subjectId, completedSessions, totalSeconds, date) {
   try {
-    const session = await window.supabaseInsertSession(
-      subjectId,
-      completedSessions,
-      totalSeconds,
-      date
-    );
+    const session = await window.supabaseInsertSession(subjectId, completedSessions, totalSeconds, date);
     state.sessions.push({
       id: session.id,
       subjectId: session.subject_id,
@@ -233,7 +218,6 @@ async function addSession(subjectId, completedSessions, totalSeconds, date) {
   }
 }
 
-// Streak functions
 async function updateStreak() {
   try {
     const today = todayISO();
@@ -256,7 +240,6 @@ async function updateStreak() {
   }
 }
 
-// Utility functions
 function todayISO() {
   const now = new Date();
   return now.toISOString().split("T")[0];
@@ -282,7 +265,6 @@ function daysBetween(date1, date2) {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
-// Logout function
 async function logout() {
   try {
     await window.supabaseSignOut();
