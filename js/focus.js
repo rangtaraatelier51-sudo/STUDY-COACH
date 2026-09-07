@@ -10,10 +10,14 @@ let sessionStartTime = null;
 let sessionNumber = 1;
 let selectedSubject = null;
 
-async function initFocus() {
+
+async function initCFocus() {
   state = loadState();
   populateSubjectSelect();
-  renderSessionHistory();
+  document.getElementById("logout-btn").addEventListener("click", logout);
+}
+
+initCoach();
   document.getElementById("logout-btn").addEventListener("click", logout);
 }
 
