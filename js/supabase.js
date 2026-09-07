@@ -36,10 +36,15 @@ const supabaseReadyPromise = new Promise(resolve => {
   readyResolve = resolve;
 });
 
-initSupabase().then(() => readyResolve()).catch(() => readyResolve());
+initSupabase().then(() => {
+  window.supabaseUser = currentUser; // Update AFTER session check
+  readyResolve();
+}).catch((err) => {
+  console.error("Init error:", err);
+  readyResolve();
+});
 
 window.supabaseReady = () => supabaseReadyPromise;
-window.supabaseUser = currentUser;
 
 window.supabaseSignUp = async (email, password) => {
   const { data, error } = await supabase.auth.signUp({ email, password });
