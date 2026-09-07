@@ -1,4 +1,4 @@
-// Shared data store. Uses Supabase backend.
+// Shared data store. Uses localStorage (no backend).
 
 let state = {
   subjects: [],
@@ -9,235 +9,126 @@ let state = {
   lastActiveDate: null,
 };
 
-async function loadState() {
+function loadState() {
   try {
-    await window.supabaseReady();
-    
-    if (!window.supabaseUser) {
-      window.location.href = "auth.html";
-      return state;
+    const saved = localStorage.getItem("studyCoachState");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state = { ...state, ...parsed };
     }
-
-    const [subjects, tasks, exams, sessions, stats] = await Promise.all([
-      window.supabaseGetSubjects(),
-      window.supabaseGetTasks(),
-      window.supabaseGetExams(),
-      window.supabaseGetSessions(),
-      window.supabaseGetUserStats(),
-    ]);
-
-    state.subjects = subjects.map(s => ({
-      id: s.id,
-      name: s.name,
-      chapters: (s.chapters || []).map(c => ({ id: c.id, name: c.name })),
-    }));
-
-    state.tasks = tasks.map(t => ({
-      id: t.id,
-      title: t.title,
-      subjectId: t.subject_id,
-      chapterId: t.chapter_id,
-      done: t.done,
-    }));
-
-    state.exams = exams.map(e => ({
-      id: e.id,
-      subject: e.subject_id,
-      date: e.exam_date,
-    }));
-
-    state.sessions = sessions.map(s => ({
-      id: s.id,
-      subjectId: s.subject_id,
-      completedSessions: s.completed_sessions,
-      totalSeconds: s.total_seconds,
-      date: s.session_date,
-    }));
-
-    state.streak = stats.streak || 0;
-    state.lastActiveDate = stats.last_active_date;
-
-    return state;
   } catch (err) {
     console.error("Failed to load state:", err);
-    return state;
   }
+  return state;
 }
 
-async function saveState(newState) {
+function saveState(newState) {
   state = newState;
+  try {
+    localStorage.setItem("studyCoachState", JSON.stringify(state));
+  } catch (err) {
+    console.error("Failed to save state:", err);
+  }
 }
 
 async function addSubject(name) {
-  try {
-    const subject = await window.supabaseInsertSubject(name);
-    state.subjects.push({
-      id: subject.id,
-      name: subject.name,
-      chapters: [],
-    });
-    return subject;
-  } catch (err) {
-    console.error("Failed to add subject:", err);
-    throw err;
-  }
+  const id = Date.now();
+  const subject = { id, name, chapters: [] };
+  state.subjects.push(subject);
+  saveState(state);
+  return subject;
 }
 
 async function updateSubject(id, updates) {
-  try {
-    await window.supabaseUpdateSubject(id, updates);
-    const idx = state.subjects.findIndex(s => s.id === id);
-    if (idx >= 0) {
-      state.subjects[idx] = { ...state.subjects[idx], ...updates };
-    }
-  } catch (err) {
-    console.error("Failed to update subject:", err);
-    throw err;
+  const idx = state.subjects.findIndex(s => s.id === id);
+  if (idx >= 0) {
+    state.subjects[idx] = { ...state.subjects[idx], ...updates };
+    saveState(state);
   }
 }
 
 async function deleteSubject(id) {
-  try {
-    await window.supabaseDeleteSubject(id);
-    state.subjects = state.subjects.filter(s => s.id !== id);
-    state.tasks = state.tasks.filter(t => t.subjectId !== id);
-  } catch (err) {
-    console.error("Failed to delete subject:", err);
-    throw err;
-  }
+  state.subjects = state.subjects.filter(s => s.id !== id);
+  state.tasks = state.tasks.filter(t => t.subjectId !== id);
+  saveState(state);
 }
 
 async function addChapter(subjectId, name) {
-  try {
-    const chapter = await window.supabaseInsertChapter(subjectId, name);
-    const subjectIdx = state.subjects.findIndex(s => s.id === subjectId);
-    if (subjectIdx >= 0) {
-      state.subjects[subjectIdx].chapters.push({
-        id: chapter.id,
-        name: chapter.name,
-      });
-    }
-    return chapter;
-  } catch (err) {
-    console.error("Failed to add chapter:", err);
-    throw err;
+  const id = Date.now();
+  const chapter = { id, name };
+  const subjectIdx = state.subjects.findIndex(s => s.id === subjectId);
+  if (subjectIdx >= 0) {
+    state.subjects[subjectIdx].chapters.push(chapter);
+    saveState(state);
   }
+  return chapter;
 }
 
 async function deleteChapter(id) {
-  try {
-    await window.supabaseDeleteChapter(id);
-    state.subjects.forEach(s => {
-      s.chapters = s.chapters.filter(c => c.id !== id);
-    });
-  } catch (err) {
-    console.error("Failed to delete chapter:", err);
-    throw err;
-  }
+  state.subjects.forEach(s => {
+    s.chapters = s.chapters.filter(c => c.id !== id);
+  });
+  saveState(state);
 }
 
 async function addTask(title, subjectId, chapterId) {
-  try {
-    const task = await window.supabaseInsertTask(title, subjectId, chapterId);
-    state.tasks.push({
-      id: task.id,
-      title: task.title,
-      subjectId: task.subject_id,
-      chapterId: task.chapter_id,
-      done: false,
-    });
-    return task;
-  } catch (err) {
-    console.error("Failed to add task:", err);
-    throw err;
-  }
+  const id = Date.now();
+  const task = { id, title, subjectId, chapterId, done: false };
+  state.tasks.push(task);
+  saveState(state);
+  return task;
 }
 
 async function updateTask(id, updates) {
-  try {
-    await window.supabaseUpdateTask(id, updates);
-    const idx = state.tasks.findIndex(t => t.id === id);
-    if (idx >= 0) {
-      state.tasks[idx] = { ...state.tasks[idx], ...updates };
-    }
-  } catch (err) {
-    console.error("Failed to update task:", err);
-    throw err;
+  const idx = state.tasks.findIndex(t => t.id === id);
+  if (idx >= 0) {
+    state.tasks[idx] = { ...state.tasks[idx], ...updates };
+    saveState(state);
   }
 }
 
 async function deleteTask(id) {
-  try {
-    await window.supabaseDeleteTask(id);
-    state.tasks = state.tasks.filter(t => t.id !== id);
-  } catch (err) {
-    console.error("Failed to delete task:", err);
-    throw err;
-  }
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  saveState(state);
 }
 
 async function addExam(subjectId, date) {
-  try {
-    const exam = await window.supabaseInsertExam(subjectId, date);
-    state.exams.push({
-      id: exam.id,
-      subject: exam.subject_id,
-      date: exam.exam_date,
-    });
-    return exam;
-  } catch (err) {
-    console.error("Failed to add exam:", err);
-    throw err;
-  }
+  const id = Date.now();
+  const exam = { id, subject: subjectId, date };
+  state.exams.push(exam);
+  saveState(state);
+  return exam;
 }
 
 async function deleteExam(id) {
-  try {
-    await window.supabaseDeleteExam(id);
-    state.exams = state.exams.filter(e => e.id !== id);
-  } catch (err) {
-    console.error("Failed to delete exam:", err);
-    throw err;
-  }
+  state.exams = state.exams.filter(e => e.id !== id);
+  saveState(state);
 }
 
 async function addSession(subjectId, completedSessions, totalSeconds, date) {
-  try {
-    const session = await window.supabaseInsertSession(subjectId, completedSessions, totalSeconds, date);
-    state.sessions.push({
-      id: session.id,
-      subjectId: session.subject_id,
-      completedSessions: session.completed_sessions,
-      totalSeconds: session.total_seconds,
-      date: session.session_date,
-    });
-    return session;
-  } catch (err) {
-    console.error("Failed to add session:", err);
-    throw err;
-  }
+  const id = Date.now();
+  const session = { id, subjectId, completedSessions, totalSeconds, date };
+  state.sessions.push(session);
+  saveState(state);
+  return session;
 }
 
 async function updateStreak() {
-  try {
-    const today = todayISO();
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayISO = yesterday.toISOString().split("T")[0];
+  const today = todayISO();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayISO = yesterday.toISOString().split("T")[0];
 
-    let newStreak = state.streak;
-    if (state.lastActiveDate === yesterdayISO) {
-      newStreak = state.streak + 1;
-    } else if (state.lastActiveDate !== today) {
-      newStreak = 1;
-    }
-
-    await window.supabaseUpdateUserStats(newStreak, today);
-    state.streak = newStreak;
-    state.lastActiveDate = today;
-  } catch (err) {
-    console.error("Failed to update streak:", err);
+  let newStreak = state.streak;
+  if (state.lastActiveDate === yesterdayISO) {
+    newStreak = state.streak + 1;
+  } else if (state.lastActiveDate !== today) {
+    newStreak = 1;
   }
+
+  state.streak = newStreak;
+  state.lastActiveDate = today;
+  saveState(state);
 }
 
 function todayISO() {
@@ -266,10 +157,10 @@ function daysBetween(date1, date2) {
 }
 
 async function logout() {
-  try {
-    await window.supabaseSignOut();
-    window.location.href = "auth.html";
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
+  localStorage.removeItem("studyCoachState");
+  window.location.href = "index.html";
 }
+
+// Add dummy Supabase functions so existing code doesn't break
+window.supabaseReady = () => Promise.resolve();
+window.supabaseUser = true;
