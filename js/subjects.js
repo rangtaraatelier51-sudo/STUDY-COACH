@@ -4,7 +4,7 @@ state = null;
 let editingSubjectId = null;
 
 async function initSubjects() {
-  state = await loadState();
+  state = loadState();
   renderSubjects();
   document.getElementById("logout-btn").addEventListener("click", logout);
 }
