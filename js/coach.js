@@ -165,4 +165,11 @@ document.getElementById("regenerate-btn").addEventListener("click", () => {
 });
 
 // ---------- init ----------
-populateSubjectSelect();
+// Init function that waits for state
+async function initCoach() {
+  state = loadState();
+  populateSubjectSelect();
+  document.getElementById("logout-btn").addEventListener("click", logout);
+}
+
+initCoach();
