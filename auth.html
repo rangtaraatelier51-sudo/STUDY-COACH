@@ -139,24 +139,16 @@
     </div>
   </div>
 
-<script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  console.log("Checking for Supabase library...");
-  setTimeout(() => {
-    console.log("window.supabase exists?", !!window.supabase);
-    if (window.supabase) {
-      console.log("Supabase methods:", Object.keys(window.supabase));
-    }
-  }, 1000);
-</script>
-  
+  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
     const SUPABASE_URL = "https://hnjkjlrwbsdveaqlyrnd.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuamtqbHJ3YnNkdmVhcWx5cm5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MDgwMDksImV4cCI6MjEwNDI4NDAwOX0.IxKImDu-w6RhijSDfRWADXmI5Um4bajd5ljxRq0g0s4";
 
-    let supabase = null;
+    let sbClient = null;
 
-    // Wait for supabase to load
-    async function initAuth() {
+    // Wait for supabase library to load
+    async function waitForSupabase() {
       let attempts = 0;
       while (!window.supabase && attempts < 100) {
         await new Promise(r => setTimeout(r, 50));
@@ -164,17 +156,26 @@
       }
 
       if (!window.supabase) {
-        document.getElementById("auth-error").textContent = "Failed to load Supabase library";
-        document.getElementById("auth-error").style.display = "block";
-        return;
+        throw new Error("Supabase library failed to load");
       }
 
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      return window.supabase;
+    }
 
-      // Check if already logged in
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        window.location.href = "index.html";
+    async function initAuth() {
+      try {
+        const supabaseModule = await waitForSupabase();
+        sbClient = supabaseModule.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Check if already logged in
+        const { data: { session } } = await sbClient.auth.getSession();
+        if (session) {
+          window.location.href = "index.html";
+        }
+      } catch (err) {
+        console.error("Auth init failed:", err);
+        document.getElementById("auth-error").textContent = "Failed to initialize. Please refresh.";
+        document.getElementById("auth-error").style.display = "block";
       }
     }
 
@@ -212,8 +213,10 @@
       loadingDiv.style.display = "block";
 
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        // Save auth for other pages
+        window.localStorage.setItem("supabase_user", JSON.stringify(data.user));
         window.location.href = "index.html";
       } catch (err) {
         errorDiv.textContent = err.message || "Login failed";
@@ -239,20 +242,22 @@
       loadingDiv.style.display = "block";
 
       try {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await sbClient.auth.signUp({ email, password });
         if (error) throw error;
-        errorDiv.style.display = "none";
+        
         errorDiv.textContent = "Account created! You can now sign in.";
         errorDiv.style.background = "rgba(127, 182, 158, 0.1)";
         errorDiv.style.borderColor = "var(--sage)";
         errorDiv.style.color = "var(--sage)";
         errorDiv.style.display = "block";
+        
         signupForm.reset();
         setTimeout(() => {
           loginForm.style.display = "flex";
           signupForm.style.display = "none";
           toggleText.textContent = "Don't have an account?";
           toggleBtn.textContent = "Sign up";
+          errorDiv.style.display = "none";
         }, 2000);
       } catch (err) {
         errorDiv.textContent = err.message || "Signup failed";
