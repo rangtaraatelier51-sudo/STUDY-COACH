@@ -22,6 +22,7 @@ function loadState() {
   return state;
 }
 
+
 function saveState(newState) {
   state = newState;
   try {
