@@ -1,38 +1,36 @@
-// Supabase client initialization and wrapper functions
 const SUPABASE_URL = "https://hnjkjlrwbsdveaqlyrnd.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuamtqbHJ3YnNkdmVhcWx5cm5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MDgwMDksImV4cCI6MjEwNDI4NDAwOX0.IxKImDu-w6RhijSDfRWADXmI5Um4bajd5ljxRq0g0s4";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuamtqbHJ3YnNkdmVhcWx5cm5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDgwMDksImV4cCI6MjEwNDI4NDAwOX0.IxKImDu-w6RhijSDfRWADXmI5Um4bajd5ljxRq0g0s4";
 
 let supabase = null;
 let currentUser = null;
 
-// Initialize Supabase using the CDN-loaded library
-async function initSupabase() {
-  // Wait for the Supabase library to be available globally
+async function waitForSupabase() {
   let attempts = 0;
   while (!window.supabase && attempts < 100) {
     await new Promise(r => setTimeout(r, 50));
     attempts++;
   }
+  if (!window.supabase) {
+    throw new Error("Supabase library not loaded");
+  }
+  return window.supabase;
+}
 
-  if (window.supabase && window.supabase.createClient) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function initSupabase() {
+  try {
+    const supabaseModule = await waitForSupabase();
+    supabase = supabaseModule.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Check if user is logged in
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        currentUser = session.user;
-        window.supabaseUser = currentUser;
-      }
-    } catch (err) {
-      console.error("Failed to check session:", err);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      window.supabaseUser = currentUser;
     }
-  } else {
-    console.error("Supabase library not loaded");
+  } catch (err) {
+    console.error("Supabase init failed:", err);
   }
 }
 
-// Ready promise
 let readyResolve = null;
 const supabaseReadyPromise = new Promise(resolve => {
   readyResolve = resolve;
@@ -43,7 +41,6 @@ initSupabase().then(() => readyResolve()).catch(() => readyResolve());
 window.supabaseReady = () => supabaseReadyPromise;
 window.supabaseUser = currentUser;
 
-// Auth
 window.supabaseSignUp = async (email, password) => {
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) throw error;
@@ -65,7 +62,6 @@ window.supabaseSignOut = async () => {
   window.supabaseUser = null;
 };
 
-// Subjects
 window.supabaseInsertSubject = async (name) => {
   const { data, error } = await supabase.from("subjects").insert([{ user_id: currentUser.id, name }]).select();
   if (error) throw error;
@@ -89,7 +85,6 @@ window.supabaseDeleteSubject = async (id) => {
   if (error) throw error;
 };
 
-// Chapters
 window.supabaseInsertChapter = async (subjectId, name) => {
   const { data, error } = await supabase.from("chapters").insert([{ subject_id: subjectId, name }]).select();
   if (error) throw error;
@@ -101,7 +96,6 @@ window.supabaseDeleteChapter = async (id) => {
   if (error) throw error;
 };
 
-// Tasks
 window.supabaseInsertTask = async (title, subjectId, chapterId) => {
   const { data, error } = await supabase.from("tasks").insert([{
     user_id: currentUser.id,
@@ -131,7 +125,6 @@ window.supabaseDeleteTask = async (id) => {
   if (error) throw error;
 };
 
-// Exams
 window.supabaseInsertExam = async (subjectId, examDate) => {
   const { data, error } = await supabase.from("exams").insert([{ user_id: currentUser.id, subject_id: subjectId, exam_date: examDate }]).select();
   if (error) throw error;
@@ -149,7 +142,6 @@ window.supabaseDeleteExam = async (id) => {
   if (error) throw error;
 };
 
-// Sessions
 window.supabaseInsertSession = async (subjectId, completedSessions, totalSeconds, sessionDate) => {
   const { data, error } = await supabase.from("sessions").insert([{
     user_id: currentUser.id,
@@ -168,7 +160,6 @@ window.supabaseGetSessions = async () => {
   return data || [];
 };
 
-// Stats
 window.supabaseGetUserStats = async () => {
   const { data, error } = await supabase.from("user_stats").select("*").eq("user_id", currentUser.id).single();
   if (error && error.code !== "PGRST116") throw error;
