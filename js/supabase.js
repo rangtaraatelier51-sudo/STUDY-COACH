@@ -5,21 +5,25 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let supabase = null;
 let currentUser = null;
 
-// Initialize Supabase
-async function initSupabase() {
-  // Wait for the Supabase library to load from the script tag
+// Wait for Supabase library to load from CDN
+async function waitForSupabase() {
   let attempts = 0;
-  while (!window.supabase && attempts < 50) {
-    await new Promise(resolve => setTimeout(resolve, 100));
+  while (!window.supabase && attempts < 100) {
+    await new Promise(resolve => setTimeout(resolve, 50));
     attempts++;
   }
-
+  
   if (!window.supabase) {
-    console.error("Supabase library failed to load");
-    return;
+    throw new Error("Supabase library failed to load");
   }
+  
+  return window.supabase;
+}
 
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Initialize Supabase
+async function initSupabase() {
+  const { createClient } = await waitForSupabase();
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   
   // Check if user is already logged in
   const { data: { session } } = await supabase.auth.getSession();
@@ -37,6 +41,9 @@ const supabaseReadyPromise = new Promise(resolve => {
 });
 
 initSupabase().then(() => {
+  readyResolve();
+}).catch(err => {
+  console.error("Supabase init failed:", err);
   readyResolve();
 });
 
@@ -232,7 +239,7 @@ async function supabaseGetUserStats() {
     .select("*")
     .eq("user_id", currentUser.id)
     .single();
-  if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows
+  if (error && error.code !== "PGRST116") throw error;
   return data || { user_id: currentUser.id, streak: 0, last_active_date: null };
 }
 
