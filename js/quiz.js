@@ -1,9 +1,12 @@
 // Quiz page logic. Relies on js/store.js being loaded first.
-async function initQuiz() {
+// Init function that waits for state
+async function initCoach() {
   state = loadState();
   populateSubjectSelect();
+  document.getElementById("logout-btn").addEventListener("click", logout);
 }
-initQuiz();
+
+initCoach();
 let currentQuiz = null;
 let currentQuestionIndex = 0;
 let selectedAnswer = null;
