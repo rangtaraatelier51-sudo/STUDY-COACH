@@ -1,7 +1,7 @@
 const SUPABASE_URL = "https://hnjkjlrwbsdveaqlyrnd.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuamtqbHJ3YnNkdmVhcWx5cm5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDgwMDksImV4cCI6MjEwNDI4NDAwOX0.IxKImDu-w6RhijSDfRWADXmI5Um4bajd5ljxRq0g0s4";
 
-let supabase = null;
+let sbClient = null;
 let currentUser = null;
 
 async function waitForSupabase() {
@@ -19,10 +19,9 @@ async function waitForSupabase() {
 async function initSupabase() {
   try {
     const supabaseModule = await waitForSupabase();
-    supabase = supabaseModule.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    sbClient = supabaseModule.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Get the session
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session }, error } = await sbClient.auth.getSession();
     
     if (error) {
       console.error("Session error:", error);
@@ -32,9 +31,7 @@ async function initSupabase() {
     if (session && session.user) {
       currentUser = session.user;
       window.supabaseUser = currentUser;
-      console.log("User logged in:", currentUser.id);
     } else {
-      console.log("No session found, redirecting to auth");
       window.location.href = "auth.html";
     }
   } catch (err) {
@@ -48,22 +45,18 @@ const supabaseReadyPromise = new Promise(resolve => {
   readyResolve = resolve;
 });
 
-initSupabase().then(() => {
-  readyResolve();
-}).catch(() => {
-  readyResolve();
-});
+initSupabase().then(() => readyResolve()).catch(() => readyResolve());
 
 window.supabaseReady = () => supabaseReadyPromise;
 
 window.supabaseSignUp = async (email, password) => {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await sbClient.auth.signUp({ email, password });
   if (error) throw error;
   return data;
 };
 
 window.supabaseSignIn = async (email, password) => {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
   if (error) throw error;
   currentUser = data.user;
   window.supabaseUser = currentUser;
@@ -71,55 +64,48 @@ window.supabaseSignIn = async (email, password) => {
 };
 
 window.supabaseSignOut = async () => {
-  const { error } = await supabase.auth.signOut();
+  const { error } = await sbClient.auth.signOut();
   if (error) throw error;
   currentUser = null;
   window.supabaseUser = null;
 };
 
 window.supabaseInsertSubject = async (name) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("subjects").insert([{ user_id: currentUser.id, name }]).select();
+  const { data, error } = await sbClient.from("subjects").insert([{ user_id: currentUser.id, name }]).select();
   if (error) throw error;
   return data[0];
 };
 
 window.supabaseGetSubjects = async () => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("subjects").select("*, chapters(*)").eq("user_id", currentUser.id);
+  const { data, error } = await sbClient.from("subjects").select("*, chapters(*)").eq("user_id", currentUser.id);
   if (error) throw error;
   return data || [];
 };
 
 window.supabaseUpdateSubject = async (id, updates) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("subjects").update(updates).eq("id", id).eq("user_id", currentUser.id).select();
+  const { data, error } = await sbClient.from("subjects").update(updates).eq("id", id).eq("user_id", currentUser.id).select();
   if (error) throw error;
   return data[0];
 };
 
 window.supabaseDeleteSubject = async (id) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { error } = await supabase.from("subjects").delete().eq("id", id).eq("user_id", currentUser.id);
+  const { error } = await sbClient.from("subjects").delete().eq("id", id).eq("user_id", currentUser.id);
   if (error) throw error;
 };
 
 window.supabaseInsertChapter = async (subjectId, name) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("chapters").insert([{ subject_id: subjectId, name }]).select();
+  const { data, error } = await sbClient.from("chapters").insert([{ subject_id: subjectId, name }]).select();
   if (error) throw error;
   return data[0];
 };
 
 window.supabaseDeleteChapter = async (id) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { error } = await supabase.from("chapters").delete().eq("id", id);
+  const { error } = await sbClient.from("chapters").delete().eq("id", id);
   if (error) throw error;
 };
 
 window.supabaseInsertTask = async (title, subjectId, chapterId) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("tasks").insert([{
+  const { data, error } = await sbClient.from("tasks").insert([{
     user_id: currentUser.id,
     title,
     subject_id: subjectId || null,
@@ -131,48 +117,41 @@ window.supabaseInsertTask = async (title, subjectId, chapterId) => {
 };
 
 window.supabaseGetTasks = async () => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("tasks").select("*").eq("user_id", currentUser.id);
+  const { data, error } = await sbClient.from("tasks").select("*").eq("user_id", currentUser.id);
   if (error) throw error;
   return data || [];
 };
 
 window.supabaseUpdateTask = async (id, updates) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("tasks").update(updates).eq("id", id).eq("user_id", currentUser.id).select();
+  const { data, error } = await sbClient.from("tasks").update(updates).eq("id", id).eq("user_id", currentUser.id).select();
   if (error) throw error;
   return data[0];
 };
 
 window.supabaseDeleteTask = async (id) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { error } = await supabase.from("tasks").delete().eq("id", id).eq("user_id", currentUser.id);
+  const { error } = await sbClient.from("tasks").delete().eq("id", id).eq("user_id", currentUser.id);
   if (error) throw error;
 };
 
 window.supabaseInsertExam = async (subjectId, examDate) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("exams").insert([{ user_id: currentUser.id, subject_id: subjectId, exam_date: examDate }]).select();
+  const { data, error } = await sbClient.from("exams").insert([{ user_id: currentUser.id, subject_id: subjectId, exam_date: examDate }]).select();
   if (error) throw error;
   return data[0];
 };
 
 window.supabaseGetExams = async () => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("exams").select("*").eq("user_id", currentUser.id);
+  const { data, error } = await sbClient.from("exams").select("*").eq("user_id", currentUser.id);
   if (error) throw error;
   return data || [];
 };
 
 window.supabaseDeleteExam = async (id) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { error } = await supabase.from("exams").delete().eq("id", id).eq("user_id", currentUser.id);
+  const { error } = await sbClient.from("exams").delete().eq("id", id).eq("user_id", currentUser.id);
   if (error) throw error;
 };
 
 window.supabaseInsertSession = async (subjectId, completedSessions, totalSeconds, sessionDate) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("sessions").insert([{
+  const { data, error } = await sbClient.from("sessions").insert([{
     user_id: currentUser.id,
     subject_id: subjectId || null,
     completed_sessions: completedSessions,
@@ -184,22 +163,19 @@ window.supabaseInsertSession = async (subjectId, completedSessions, totalSeconds
 };
 
 window.supabaseGetSessions = async () => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("sessions").select("*").eq("user_id", currentUser.id);
+  const { data, error } = await sbClient.from("sessions").select("*").eq("user_id", currentUser.id);
   if (error) throw error;
   return data || [];
 };
 
 window.supabaseGetUserStats = async () => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("user_stats").select("*").eq("user_id", currentUser.id).single();
+  const { data, error } = await sbClient.from("user_stats").select("*").eq("user_id", currentUser.id).single();
   if (error && error.code !== "PGRST116") throw error;
   return data || { user_id: currentUser.id, streak: 0, last_active_date: null };
 };
 
 window.supabaseUpdateUserStats = async (streak, lastActiveDate) => {
-  if (!currentUser) throw new Error("Not logged in");
-  const { data, error } = await supabase.from("user_stats").upsert({
+  const { data, error } = await sbClient.from("user_stats").upsert({
     user_id: currentUser.id,
     streak,
     last_active_date: lastActiveDate,
