@@ -4,7 +4,7 @@ async function initQuiz() {
   populateSubjectSelect();
 }
 initQuiz();
-let state = null;
+
 // ---------- plan generation (rule-based, no API) ----------
 function generatePlan(subjectId, daysRemaining, currentCompletion, hoursPerDay) {
   const subject = state.subjects.find((s) => s.id === subjectId);
