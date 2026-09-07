@@ -4,7 +4,6 @@ async function initQuiz() {
   populateSubjectSelect();
 }
 initQuiz();
-let state = null;
 let currentQuiz = null;
 let currentQuestionIndex = 0;
 let selectedAnswer = null;
