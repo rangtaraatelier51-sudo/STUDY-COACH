@@ -139,22 +139,45 @@
     </div>
   </div>
 
-  <script src="js/supabase.js"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
+    const SUPABASE_URL = "https://hnjkjlrwbsdveaqlyrnd.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuamtqbHJ3YnNkdmVhcWx5cm5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MDgwMDksImV4cCI6MjEwNDI4NDAwOX0.IxKImDu-w6RhijSDfRWADXmI5Um4bajd5ljxRq0g0s4";
+
+    let supabase = null;
+
+    // Wait for supabase to load
+    async function initAuth() {
+      let attempts = 0;
+      while (!window.supabase && attempts < 100) {
+        await new Promise(r => setTimeout(r, 50));
+        attempts++;
+      }
+
+      if (!window.supabase) {
+        document.getElementById("auth-error").textContent = "Failed to load Supabase library";
+        document.getElementById("auth-error").style.display = "block";
+        return;
+      }
+
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // Check if already logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        window.location.href = "index.html";
+      }
+    }
+
+    initAuth();
+
     const loginForm = document.getElementById("login-form");
     const signupForm = document.getElementById("signup-form");
     const toggleBtn = document.getElementById("toggle-form");
     const toggleText = document.getElementById("toggle-text");
     const errorDiv = document.getElementById("auth-error");
     const loadingDiv = document.getElementById("auth-loading");
-
-    // Check if already logged in
-    window.supabaseReady().then(() => {
-      const user = window.supabaseUser;
-      if (user) {
-        window.location.href = "index.html";
-      }
-    });
 
     toggleBtn.addEventListener("click", () => {
       const isLoginShown = loginForm.style.display !== "none";
@@ -181,7 +204,8 @@
       loadingDiv.style.display = "block";
 
       try {
-        await window.supabaseSignIn(email, password);
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
         window.location.href = "index.html";
       } catch (err) {
         errorDiv.textContent = err.message || "Login failed";
@@ -207,7 +231,8 @@
       loadingDiv.style.display = "block";
 
       try {
-        await window.supabaseSignUp(email, password);
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
         errorDiv.style.display = "none";
         errorDiv.textContent = "Account created! You can now sign in.";
         errorDiv.style.background = "rgba(127, 182, 158, 0.1)";
@@ -229,7 +254,6 @@
       }
     });
   </script>
-<script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase.js"></script>
+
 </body>
 </html>
