@@ -139,9 +139,17 @@
     </div>
   </div>
 
-  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <script>
+<script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  console.log("Checking for Supabase library...");
+  setTimeout(() => {
+    console.log("window.supabase exists?", !!window.supabase);
+    if (window.supabase) {
+      console.log("Supabase methods:", Object.keys(window.supabase));
+    }
+  }, 1000);
+</script>
+  
     const SUPABASE_URL = "https://hnjkjlrwbsdveaqlyrnd.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuamtqbHJ3YnNkdmVhcWx5cm5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MDgwMDksImV4cCI6MjEwNDI4NDAwOX0.IxKImDu-w6RhijSDfRWADXmI5Um4bajd5ljxRq0g0s4";
 
